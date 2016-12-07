@@ -39,8 +39,7 @@ class Pipeliner(object):
                     row_of_plan[column] = row_key
                 plan_rows.append(row_of_plan) 
         
-        self.plan_table = DataFrame().from_dict(plan_rows)
-        self.plan_table.columns = columns
+        self.plan_table = DataFrame().from_dict(plan_rows)[columns]
         self.named_steps = steps
         self.eval_cv = eval_cv
         self.grid_cv = grid_cv
