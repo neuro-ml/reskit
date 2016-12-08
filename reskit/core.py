@@ -3,13 +3,15 @@ from sklearn.model_selection import cross_val_score, cross_val_predict
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics.scorer import check_scoring
 from sklearn.pipeline import Pipeline
-from sklearn.base import TransformerMixin
+from sklearn.base import TransformerMixin, BaseEstimator
 
 from collections import OrderedDict
 from itertools import product
 from pandas import DataFrame
 from numpy import mean, std, hstack, zeros
 from time import time
+
+import os
 
 
 class Pipeliner(object):
@@ -39,8 +41,7 @@ class Pipeliner(object):
                     row_of_plan[column] = row_key
                 plan_rows.append(row_of_plan) 
         
-        self.plan_table = DataFrame().from_dict(plan_rows)
-        self.plan_table.columns = columns
+        self.plan_table = DataFrame().from_dict(plan_rows)[columns]
         self.named_steps = steps
         self.eval_cv = eval_cv
         self.grid_cv = grid_cv
@@ -111,6 +112,9 @@ class Pipeliner(object):
             param_grid = dict()
             for key, value in self.param_grid[classifier_key].items():
                 param_grid['{}__{}'.format(classifier_key, key)] = value
+
+            self.asdf = param_grid
+            self.asdfasdf = self.param_grid[classifier_key]
 
             grid_clf = GridSearchCV(estimator=Pipeline(steps),
                                     param_grid=param_grid,
@@ -200,13 +204,15 @@ class Pipeliner(object):
 
             columns += grid_steps + eval_steps
 
-        results = DataFrame(columns=columns, index=self.plan_table.index)
+        results = DataFrame(columns=columns)
 
+        os.remove(resutls_file)
         if resutls_file != None:
             results.to_csv(resutls_file)
         
         columns = list(self.plan_table.columns)
         results[columns] = self.plan_table
+
        
         with open(logs_file, 'w+') as logs:
             N = len(self.plan_table.index)
@@ -258,13 +264,13 @@ class Pipeliner(object):
                     scores_key = 'eval_{}_scores'.format(metric)
                     results.loc[idx][scores_key] = str(scores)
                     logs.write('Scores: {}\n\n'.format(str(scores)))
-                results.loc[[idx]].to_csv(resutls_file, header=False, mode='a')
+                results.loc[[idx]].to_csv(resutls_file, header=False, mode='a+')
         
         return results
             
 
 
-class Transformer(TransformerMixin):
+class Transformer(TransformerMixin, BaseEstimator):
     def __init__(self, func, params=None, collect=None):
         self.func = func
         self.params = params
