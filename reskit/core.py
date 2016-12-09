@@ -217,8 +217,7 @@ class Pipeliner(object):
         with open(logs_file, 'w+') as logs:
             N = len(self.plan_table.index)
             for idx in self.plan_table.index:
-
-                print('Line: {}/{}'.format(idx + 1, N), end='\r')
+                print('Line: {}/{}'.format(idx + 1, N))
                 logs.write('Line: {}/{}\n'.format(idx + 1, N))
                 logs.write('{}\n'.format(str(self.plan_table.loc[idx])))
                 row = self.plan_table.loc[idx]

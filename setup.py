@@ -25,8 +25,6 @@ setup(name='reskit',
           ],
       license='new BSD',
       install_requires=[
-          'numpy',
-          'scipy',
           'sklearn',
           'python-igraph',
           'networkx',
