@@ -15,7 +15,7 @@ import os
 
 
 class Pipeliner(object):
-    def __init__(self, steps, eval_cv, grid_cv, param_grid=dict(), 
+    def __init__(self, steps, eval_cv, grid_cv, param_grid=dict(),
             banned_combos=list()):
         steps = OrderedDict(steps)
         columns = list(steps)
@@ -39,8 +39,8 @@ class Pipeliner(object):
                 row_of_plan = OrderedDict()
                 for column, row_key in zip(columns, row_keys):
                     row_of_plan[column] = row_key
-                plan_rows.append(row_of_plan) 
-        
+                plan_rows.append(row_of_plan)
+
         self.plan_table = DataFrame().from_dict(plan_rows)[columns]
         self.named_steps = steps
         self.eval_cv = eval_cv
@@ -104,11 +104,11 @@ class Pipeliner(object):
         classifier_key = row_keys[-1]
         if classifier_key in self.param_grid:
             columns = list(self.plan_table.columns)[-len(row_keys):]
-            
+
             steps = list()
             for row_key, column in zip(row_keys, columns):
                 steps.append((row_key, self.named_steps[column][row_key]))
-            
+
             param_grid = dict()
             for key, value in self.param_grid[classifier_key].items():
                 param_grid['{}__{}'.format(classifier_key, key)] = value
@@ -122,7 +122,7 @@ class Pipeliner(object):
                                     n_jobs=-1,
                                     cv=self.grid_cv)
             grid_clf.fit(X, y)
-            
+
             best_params = dict()
             classifier_key_len = len(classifier_key)
             for key, value in grid_clf.best_params_.items():
@@ -130,11 +130,11 @@ class Pipeliner(object):
                 best_params[key] = value
             param_key = ''.join(row_keys) + str(scoring)
             self.best_params[param_key] = best_params
-            
+
             results = dict()
             for i, params in enumerate(grid_clf.cv_results_['params']):
                 if params == grid_clf.best_params_:
-                
+
                     k = 'grid_{}_mean'.format(scoring)
                     results[k] = grid_clf.cv_results_['mean_test_score'][i]
 
@@ -157,7 +157,7 @@ class Pipeliner(object):
     def get_scores(self, X, y, row_keys, scoring, collect_n=None):
         columns = list(self.plan_table.columns)[-len(row_keys):]
         param_key = ''.join(row_keys) + str(scoring)
-        
+
         steps = list()
         for row_key, column in zip(row_keys, columns):
             steps.append((row_key, self.named_steps[column][row_key]))
@@ -185,7 +185,7 @@ class Pipeliner(object):
         return scores
 
     def get_results(self, data, caching_steps=list(), scoring='accuracy',
-            resutls_file='results.csv', logs_file='results.log', collect_n=None):
+            results_file='results.csv', logs_file='results.log', collect_n=None):
         if type(scoring) == str:
             scoring = [scoring]
 
@@ -206,14 +206,18 @@ class Pipeliner(object):
 
         results = DataFrame(columns=columns)
 
-        os.remove(resutls_file)
-        if resutls_file != None:
-            results.to_csv(resutls_file)
-        
+        try:
+            os.remove(results_file)
+            print('Removed previous results file -- {}.'.format(results_file))
+        except:
+            print('No previous results found.')
+        if results_file != None:
+            results.to_csv(results_file)
+
         columns = list(self.plan_table.columns)
         results[columns] = self.plan_table
 
-       
+
         with open(logs_file, 'w+') as logs:
             N = len(self.plan_table.index)
             for idx in self.plan_table.index:
@@ -241,15 +245,15 @@ class Pipeliner(object):
 
                     for key, value in grid_res.items():
                         results.loc[idx][key] = value
-                   
-                    time_point = time() 
+
+                    time_point = time()
                     scores = self.get_scores(X_featured, y,
                                              ml_keys,
                                              metric,
                                              collect_n)
                     spent_time = round(time() - time_point, 3)
                     logs.write('Got Scores: {} sec\n'.format(spent_time))
-                    
+
                     mean_key = 'eval_{}_mean'.format(metric)
                     scores_mean = mean(scores)
                     results.loc[idx][mean_key] = scores_mean
@@ -263,10 +267,10 @@ class Pipeliner(object):
                     scores_key = 'eval_{}_scores'.format(metric)
                     results.loc[idx][scores_key] = str(scores)
                     logs.write('Scores: {}\n\n'.format(str(scores)))
-                results.loc[[idx]].to_csv(resutls_file, header=False, mode='a+')
-        
+                results.loc[[idx]].to_csv(results_file, header=False, mode='a+')
+
         return results
-            
+
 
 
 class Transformer(TransformerMixin, BaseEstimator):
