@@ -8,7 +8,7 @@ setup(name='reskit',
       packages=find_packages(),
       version=version,
       description='Researcher kit for reproducible experiments',
-      author='Alexander Ivanov, Petrov Dmitry',
+      author='Alexander Ivanov, Dmitry Petrov',
       author_email='alexander.radievich@gmail.com,'
                    'to.dmitry.petrov@gmail.com',
       url='https://github.com/neuro-ml/reskit',
