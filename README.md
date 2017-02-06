@@ -1,5 +1,7 @@
 #Reskit
 
+[![Documentation Status](https://readthedocs.org/projects/reskit/badge/?version=latest)](http://reskit.readthedocs.io/en/latest/?badge=latest)
+
 Researcher kit for reproducible experiments.
 
 #Installation

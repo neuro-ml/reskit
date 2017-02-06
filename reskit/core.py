@@ -15,6 +15,41 @@ import os
 
 
 class Pipeliner(object):
+    """ 
+     
+
+    Parameters:
+    -----------
+    steps : list
+        List of (name, transforms) tuples
+    eval_cv : int, cross-validation generator or an iterable, optional
+        Determines the evaluation cross-validation splitting strategy.
+        Possible inputs for cv are:
+            - None, to use the default 3-fold cross validation,
+            - integer, to specify the number of folds in a `(Stratified)KFold`,
+            - An object to be used as cross-validation generator.
+            - An iterable yielding train, test splits.
+
+        For integer/None inputs, if the estimator is a classifier and ``y`` is
+        either binary or multiclass, :class:`StratifiedKFold` is used. In all
+        other cases, :class:`KFold` is used.
+
+        Refer :ref:`User Guide <cross_validation>` for the various
+        cross-validation strategies that can be used here.
+
+    grid_cv : int, cross-validation generator or an iterable, optional
+         
+    param_grid : 
+
+    banned_combos : 
+        
+    Attributes:
+    -----------
+
+    Examples:
+    ---------
+
+    """
     def __init__(self, steps, eval_cv, grid_cv, param_grid=dict(),
             banned_combos=list()):
         steps = OrderedDict(steps)
@@ -51,16 +86,45 @@ class Pipeliner(object):
         self.scores = dict()
 
     def dump(self, path_to_file):
+        """
+        
+
+        Parameters:
+        -----------
+        path_to_file : 
+
+        """
         with open(path_to_file, 'wb') as f:
             for attr in sorted(self.__dict__.keys()):
                 dump(getattr(self, attr), f)
 
     def load(self, path_to_file):
+        """
+
+
+        Parameters:
+        -----------
+        path_to_file : 
+
+        """
         with open(path_to_file, 'rb') as f:
             for attr in sorted(self.__dict__.keys()):
                 setattr(self, attr, load(f))
 
     def transform_with_caching(self, data, row_keys):
+        """
+        
+
+        Parameters:
+        -----------
+        data : 
+
+        row_keys : 
+
+        Returns:
+        --------
+
+        """
         columns = list(self.plan_table.columns[:len(row_keys)])
 
         def remove_unmatched_caching_data(row_keys):
@@ -101,6 +165,24 @@ class Pipeliner(object):
         return self._cached_data[last_cached_key]
 
     def get_grid_search_results(self, X, y, row_keys, scoring):
+        """
+        
+
+        Parameters:
+        -----------
+        X : 
+
+        y : 
+        
+        row_keys : 
+
+        scoring : 
+
+
+        Returns:
+        --------
+
+        """
         classifier_key = row_keys[-1]
         if classifier_key in self.param_grid:
             columns = list(self.plan_table.columns)[-len(row_keys):]
@@ -155,6 +237,27 @@ class Pipeliner(object):
             return results
 
     def get_scores(self, X, y, row_keys, scoring, collect_n=None):
+        """
+
+
+        Parameters:
+        -----------
+
+        X : 
+
+        y : 
+
+        row_keys : 
+
+        scoring : 
+
+        collect_n :
+
+
+        Returns:
+        --------
+
+        """
         columns = list(self.plan_table.columns)[-len(row_keys):]
         param_key = ''.join(row_keys) + str(scoring)
 
@@ -186,6 +289,28 @@ class Pipeliner(object):
 
     def get_results(self, data, caching_steps=list(), scoring='accuracy',
             results_file='results.csv', logs_file='results.log', collect_n=None):
+        """ 
+
+
+        Parameters:
+        -----------
+        data : 
+
+        caching_steps : 
+
+        scoring : 
+
+        results_file : 
+
+        logs_file : 
+        
+        collect_n :
+
+
+        Returns:
+        --------
+
+        """
         if type(scoring) == str:
             scoring = [scoring]
 
@@ -274,15 +399,52 @@ class Pipeliner(object):
 
 
 class Transformer(TransformerMixin, BaseEstimator):
+    """
+
+
+    Parameters:
+    -----------
+    func : 
+
+    params : 
+
+    collect : 
+
+
+    Attributes:
+    -----------
+
+    """
     def __init__(self, func, params=None, collect=None):
         self.func = func
         self.params = params
         self.collect = collect
 
     def fit(self, data):
+        """
+
+
+        Parameters:
+        -----------
+        data : 
+
+        Returns:
+        --------
+
+        """
         return self
 
     def transform(self, data):
+        """
+
+
+        Parameters:
+        -----------
+        data : 
+
+        Returns:
+        --------
+        """
         if type(data) == dict:
             data = data.copy()
 
