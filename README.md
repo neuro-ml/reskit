@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.org/neuro-ml/reskit.svg?branch=master)](https://travis-ci.org/neuro-ml/reskit)
 [![Documentation Status](https://readthedocs.org/projects/reskit/badge/?version=latest)](http://reskit.readthedocs.io/en/latest/?badge=latest)
-[![PyPI](https://img.shields.io/pypi/l/Django.svg)]()
 
 #Reskit
 
