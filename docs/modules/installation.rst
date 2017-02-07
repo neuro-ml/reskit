@@ -5,7 +5,7 @@ Installation
 Prerequisites
 -------------
 
-Reskit currently requires ``Python 3.4`` to run.
+Reskit currently requires ``Python 3.4`` or later to run.
 Please install ``Python`` and ``pip`` via the package manager of your operating system if it is not included already.
 
 Make sure you installed prerequisites for packages:
@@ -17,15 +17,17 @@ Make sure you installed prerequisites for packages:
   - `networkx <https://networkx.github.io/>`_
   - `pandas <http://pandas.pydata.org/>`_
 
-Stable Lasagne release
-----------------------
+.. note:: If you use ``Ubuntu 16.04``, you should install packages ``libxslt1-dev`` and ``zlib1g-dev`` for ``python-igraph``.
 
-Reskit setup all requirements automatically. 
-To install stable version, run the following command:
+.. Stable Reskit release
+.. ---------------------
 
-.. code-block:: bash
+.. Reskit setup all requirements automatically. 
+.. To install stable version, run the following command:
 
-  will be soon
+.. .. code-block:: bash
+
+..     pip install https://github.com/neuro-ml/reskit/archive/master.zip
 
 Bleeding-edge version
 ---------------------
@@ -39,7 +41,7 @@ To install lastest development version of Reskit, run the following command:
 Docker
 ------
 
-To run Reskit into docker you can use next commands.
+To run Reskit in docker you can use next commands.
 
 1. Clone:
 
@@ -54,21 +56,26 @@ To run Reskit into docker you can use next commands.
 
   docker build -t docker-reskit -f Dockerfile .
 
-3.a Run container in bash:
+3. Run container.
+
+If you want to run bash in container:
 
 .. code-block:: bash
 
   docker run -it docker-reskit bash
 
-3.b Run container in bash with shared directory (you can save files in this directory and it won't be deleted with stopping container).
+If you want to run bash in container with shared directory:
+
+.. note:: You can save files in shared directory and files won't be deleted after stopping container.
 
 .. code-block:: bash
 
   docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit bash
 
-3.c Run container and Jupyter Notebook server at ``http://localhost:8809``. 
-  Open http://localhost:8809 on your local machine in a web browser.
+If you want to start Jupyter Notebook server at ``http://localhost:8809`` in container:
 
 .. code-block:: bash
 
-  docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit bash -с 'jupyter notebook --no-browser --ip="*"'
+  docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit jupyter notebook --no-browser --ip="*"
+
+Open http://localhost:8809 on your local machine in a web browser.
