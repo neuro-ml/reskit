@@ -58,24 +58,24 @@ To run Reskit in docker you can use next commands.
 
 3. Run container.
 
-If you want to run bash in container:
+  a) If you want to run bash in container:
 
-.. code-block:: bash
+  .. code-block:: bash
 
-  docker run -it docker-reskit bash
+    docker run -it docker-reskit bash
 
-If you want to run bash in container with shared directory:
+  b) If you want to run bash in container with shared directory:
 
-.. note:: You can save files in shared directory and files won't be deleted after stopping container.
+    .. note:: You can save files in shared directory and files won't be deleted after stopping container.
 
-.. code-block:: bash
+    .. code-block:: bash
 
-  docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit bash
+      docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit bash
 
-If you want to start Jupyter Notebook server at ``http://localhost:8809`` in container:
+  c) If you want to start Jupyter Notebook server at ``http://localhost:8809`` in container:
 
-.. code-block:: bash
+    .. code-block:: bash
 
-  docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit jupyter notebook --no-browser --ip="*"
+      docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit jupyter notebook --no-browser --ip="*"
 
-Open http://localhost:8809 on your local machine in a web browser.
+    Open http://localhost:8809 on your local machine in a web browser.
