@@ -41,35 +41,34 @@ To run Reskit in docker you can use next commands.
 
 1. Clone repository:
 
-```bash
-git clone https://github.com/neuro-ml/reskit.git
-cd reskit
-```
+    ```bash
+    git clone https://github.com/neuro-ml/reskit.git
+    cd reskit
+    ```
 
 2. Build docker image:
 
-```bash
-docker build -t docker-reskit -f Dockerfile .
-```
+    ```bash
+    docker build -t docker-reskit -f Dockerfile .
+    ```
 
 3. Run docker image.
+  * If you want to run bash in container:
 
-    a) If you want to run bash in container:
+    ```bash
+    docker run -it docker-reskit bash
+    ```
 
-        ```bash
-        docker run -it docker-reskit bash
-        ```
+  * If you want to run bash in container with shared directory:
 
-    b) If you want to run bash in container with shared directory:
+    ```bash
+    docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit bash
+    ```
 
-        ```bash
-        docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit bash
-        ```
+  * If you want to start Jupyter Notebook server at http://localhost:8809 in container:
 
-    c) If you want to start Jupyter Notebook server at http://localhost:8809 in container:
+    ```bash
+    docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit jupyter notebook --no-browser --ip="*"
+    ```
 
-        ```bash
-        docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit jupyter notebook --no-browser --ip="*"
-        ```
-
-        Open http://localhost:8809 on your local machine in a web browser.
+    Open http://localhost:8809 on your local machine in a web browser.
