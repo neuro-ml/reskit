@@ -1,3 +1,6 @@
+""" Core classes. """
+
+
 from sklearn.externals.joblib import Parallel, delayed
 from sklearn.model_selection import cross_val_score, cross_val_predict
 from sklearn.model_selection import GridSearchCV
@@ -16,12 +19,13 @@ import os
 
 class Pipeliner(object):
     """ 
-     
+    
 
     Parameters:
     -----------
     steps : list
         List of (name, transforms) tuples
+
     eval_cv : int, cross-validation generator or an iterable, optional
         Determines the evaluation cross-validation splitting strategy.
         Possible inputs for cv are:
@@ -87,11 +91,12 @@ class Pipeliner(object):
 
     def dump(self, path_to_file):
         """
-        
+        Write a representation of a Pipeliner's class to a specified file.
 
         Parameters:
         -----------
-        path_to_file : 
+        path_to_file : string
+            A path to which you want to save a class.
 
         """
         with open(path_to_file, 'wb') as f:
@@ -100,11 +105,12 @@ class Pipeliner(object):
 
     def load(self, path_to_file):
         """
-
+        Load a representation of a Pipeliner's class from a specified file.
 
         Parameters:
         -----------
-        path_to_file : 
+        path_to_file : string
+            A path from which you want to load a class.
 
         """
         with open(path_to_file, 'rb') as f:
@@ -113,16 +119,20 @@ class Pipeliner(object):
 
     def transform_with_caching(self, data, row_keys):
         """
-        
+        Sequentially apply a list of transforms to an input data.
 
         Parameters:
         -----------
-        data : 
+        data : any
+            A data, to which you want to apply transformations.
 
-        row_keys : 
+        row_keys : list
+            Keys of transformations.
 
         Returns:
         --------
+        transformed_data : any
+            A data transformed with all specified transformations.
 
         """
         columns = list(self.plan_table.columns[:len(row_keys)])
@@ -166,22 +176,28 @@ class Pipeliner(object):
 
     def get_grid_search_results(self, X, y, row_keys, scoring):
         """
-        
+        Give results with tuned parameters of a specified pipeline using grid search. 
 
         Parameters:
         -----------
-        X : 
+        X : array-like, shape (n_samples, n_features)
+            Training vectors, where n_samples is the number of samples and n_features is the number of features. 
+            For kernel=”precomputed”, the expected shape of X is (n_samples, n_samples). 
 
-        y : 
+        y : array-like, shape (n_samples,)
+            Target values (class labels in classification, real numbers in regression)
         
-        row_keys : 
+        row_keys : list
+            Keys of transformations.
 
-        scoring : 
-
+        scoring : list or str
+            Name of a scoring method.
+            If None, the score method of the estimator is used.
 
         Returns:
         --------
-
+        results : dict
+            Results dictionary.
         """
         classifier_key = row_keys[-1]
         if classifier_key in self.param_grid:
@@ -238,7 +254,7 @@ class Pipeliner(object):
 
     def get_scores(self, X, y, row_keys, scoring, collect_n=None):
         """
-
+        
 
         Parameters:
         -----------
@@ -410,7 +426,6 @@ class Transformer(TransformerMixin, BaseEstimator):
 
     collect : 
 
-
     Attributes:
     -----------
 
@@ -422,7 +437,7 @@ class Transformer(TransformerMixin, BaseEstimator):
 
     def fit(self, data):
         """
-
+        
 
         Parameters:
         -----------
