@@ -4,6 +4,8 @@
 
 # Reskit
 
+[![Join the chat at https://gitter.im/ResearcherKit/Lobby](https://badges.gitter.im/ResearcherKit/Lobby.svg)](https://gitter.im/ResearcherKit/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Reskit is researcher kit for reproducible machine learning experiments.
 
 # Installation
