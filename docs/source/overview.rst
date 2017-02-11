@@ -11,7 +11,7 @@ Reskit is intended to provide
   * makes possible simply reproducible experiments
   * graph's matrix norms and metrics
 
-Getting started: Short Introduction to Reskit
+Getting started: A Short Introduction to Reskit
 ---------------------------------------------
 
 Let's say we have two datasets, and we want to compare some pipelines on
