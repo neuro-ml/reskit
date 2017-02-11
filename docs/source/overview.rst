@@ -1,8 +1,11 @@
 ========
 Overview
 ========
+
 Reskit is a Python language package for making reproducible machine learning experiments. 
 Mainly built on ``scikit-learn`` it helps to work with machine learning pipelines fast and efficient. 
+
+.. contents::
 
 Goals
 -----

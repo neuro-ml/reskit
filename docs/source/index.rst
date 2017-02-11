@@ -13,7 +13,7 @@ Reskit: Researcher Kit for Reproducible Machine Learning Experiments.
   overview
   tutorial/index
   reference/index
-  contribution
+  contributing
   development
 
 
