@@ -8,46 +8,8 @@ Goals
 -----
 
 Reskit is intended to provide
-  * fast and efficient work with lots of machine learning pipelines.
-  * graph's matrix norms and metrics
   * makes possible simply reproducible experiments
-  * simple support of self-implemented transformers in pipelines
-
-Installation
-------------
-
-Reskit currently requires ``Python 3.4`` or later to run.
-Please install ``Python`` and ``pip`` via the package manager of your operating system if it is not included already.
-
-Reskit depends on:
-  - `numpy <http://www.numpy.org/>`_
-  - `scipy <https://www.scipy.org/>`_
-  - `scikit-learn <http://scikit-learn.org/stable/>`_
-  - `python-igraph <http://igraph.org/python/>`_
-  - `networkx <https://networkx.github.io/>`_
-  - `pandas <http://pandas.pydata.org/>`_
-
-To install dependencies run next command:
-
-.. code-block:: bash
-
-	pip install -r https://raw.githubusercontent.com/neuro-ml/reskit/master/requirements.txt
-
-.. note:: 
-
-  If you use ``Ubuntu 16.04``, you should install packages ``libxslt1-dev`` and ``zlib1g-dev`` for ``python-igraph``.
-
-To install stable version, run the following command:
-
-.. code-block:: bash
-
-	pip install -U https://github.com/neuro-ml/reskit/archive/master.zip
-
-To install latest development version of Reskit, run the following commands:
-
-.. code-block:: bash
-
-  pip install https://github.com/neuro-ml/reskit/archive/master.zip
+  * graph's matrix norms and metrics
 
 Getting started: 30 seconds to Reskit
 -------------------------------------
@@ -215,6 +177,48 @@ The plan is OK. To get results we run:
 +---+----------+---------------+------------+----------------+-----------------------+----------------------+------------------------------+-----------------------+----------------------+-------------------------------------+
 | 7 | dataset2 | var_threshold |  standard  |       SVC      |       0.873096        |      0.0213294       |       {'kernel': 'rbf'}      |        0.847338       |       0.0261201      | [ 0.8654902 0.8104 0.86612245]      |
 +---+----------+---------------+------------+----------------+-----------------------+----------------------+------------------------------+-----------------------+----------------------+-------------------------------------+
+
+Installation
+------------
+
+Reskit currently requires ``Python 3.4`` or later to run.
+Please install ``Python`` and ``pip`` via the package manager of your operating system if it is not included already.
+
+Reskit depends on:
+  - `numpy <http://www.numpy.org/>`_
+  - `scikit-learn <http://scikit-learn.org/stable/>`_
+  - `pandas <http://pandas.pydata.org/>`_
+
+
+To install dependencies run next command:
+
+.. code-block:: bash
+
+	pip install -r https://raw.githubusercontent.com/neuro-ml/reskit/master/requirements.txt
+
+To install stable version, run the following command:
+
+.. code-block:: bash
+
+	pip install -U https://github.com/neuro-ml/reskit/archive/master.zip
+
+To install latest development version of Reskit, run the following commands:
+
+.. code-block:: bash
+
+  pip install https://github.com/neuro-ml/reskit/archive/master.zip
+
+Some reskit functions depends on:
+
+  - `scipy <https://www.scipy.org/>`_
+  - `python-igraph <http://igraph.org/python/>`_
+  - `networkx <https://networkx.github.io/>`_
+
+You may install it via:
+
+.. code-block:: bash
+
+  pip install -r https://raw.githubusercontent.com/nuro-ml/reskit/master/requirements_additional.txt
 
 Docker
 ------
