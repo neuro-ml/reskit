@@ -369,7 +369,11 @@ class Pipeliner(object):
                 caching_keys = list(row[caching_steps].values)
 
                 time_point = time()
-                X_featured, y = self.transform_with_caching(data, caching_keys)
+                if caching_keys != []:
+                    X_featured, y = self.transform_with_caching(data, caching_keys)
+                else:
+                    X_featured = data['X']
+                    y = data['y']
                 spent_time = round(time() - time_point, 3)
                 logs.write('Got Features: {} sec\n'.format(spent_time))
 
