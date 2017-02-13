@@ -11,6 +11,7 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from collections import OrderedDict
 from itertools import product
 from pandas import DataFrame
+from pickle import dump, load
 from numpy import mean, std, hstack, zeros
 from time import time
 
@@ -88,34 +89,6 @@ class Pipeliner(object):
         self._cached_data = OrderedDict()
         self.best_params = dict()
         self.scores = dict()
-
-    def dump(self, path_to_file):
-        """
-        Write a representation of a Pipeliner's class to a specified file.
-
-        Parameters:
-        -----------
-        path_to_file : string
-            A path to which you want to save a class.
-
-        """
-        with open(path_to_file, 'wb') as f:
-            for attr in sorted(self.__dict__.keys()):
-                dump(getattr(self, attr), f)
-
-    def load(self, path_to_file):
-        """
-        Load a representation of a Pipeliner's class from a specified file.
-
-        Parameters:
-        -----------
-        path_to_file : string
-            A path from which you want to load a class.
-
-        """
-        with open(path_to_file, 'rb') as f:
-            for attr in sorted(self.__dict__.keys()):
-                setattr(self, attr, load(f))
 
     def transform_with_caching(self, data, row_keys):
         """
