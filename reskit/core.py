@@ -54,7 +54,7 @@ class Pipeliner(object):
     ---------
 
     """
-    def __init__(self, steps, eval_cv, grid_cv, param_grid=dict(),
+    def __init__(self, steps, eval_cv=None, grid_cv=None, param_grid=dict(),
             banned_combos=list()):
         steps = OrderedDict(steps)
         columns = list(steps)
