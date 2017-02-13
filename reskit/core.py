@@ -441,7 +441,6 @@ class Transformer(TransformerMixin, BaseEstimator):
             data = data.copy()
 
         if self.params:
-            self.params['data'] = data
             result = self.func(**self.params)
         else:
             result = self.func(data)
