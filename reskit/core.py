@@ -412,7 +412,7 @@ class Transformer(TransformerMixin, BaseEstimator):
         self.params = params
         self.collect = collect
 
-    def fit(self, data):
+    def fit(self, data, target=None, **fit_params):
         """
         
 
