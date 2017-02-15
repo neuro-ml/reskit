@@ -12,65 +12,83 @@ def degrees(data):
         data['degrees'] = np.sum(data['X'], axis=1)
     else:
         raise ValueError('Provide array of valid shape: (number_of_matrices, size, size). ')
-
     return data
 
-
 def closeness_centrality(data):
-    n_nodes = data['X'].shape[0]
-    A_inv = 1./data['X']
-    SPL = scipy.sparse.csgraph.dijkstra(A_inv, directed=False,
-            unweighted=False)
-    sum_distances_vector = np.sum(SPL, 1)
-    data['closeness_centrality'] = float(n_nodes - 1)/sum_distances_vector
+    cl_c = []
+    for X in data['X']:
+        n_nodes = X.shape[0]
+        A_inv = 1./(X + 1.00000000e-99)
+        SPL = scipy.sparse.csgraph.dijkstra(A_inv, directed=False,
+                unweighted=False)
+        sum_distances_vector = np.sum(SPL, 1)
+        cl_c.append(float(n_nodes - 1)/sum_distances_vector)
+    data['closeness_centrality'] = np.array(cl_c)
     return data
 
 def betweenness_centrality(data):
-    n_nodes = data['X'].shape[0]
-    A_inv = 1./data['X']
-    G_inv = ig.Graph.Weighted_Adjacency(list(A_inv), mode="UNDIRECTED", attr="weight", loops=False)
-    data['betweenness_centrality'] = np.array(G_inv.betweenness(weights='weight', directed=False))*2./((n_nodes-1)*(n_nodes-2))
+    btw = []
+    for X in data['X']:
+        n_nodes = X.shape[0]
+        A_inv = 1./(X + 1.00000000e-99)
+        G_inv = ig.Graph.Weighted_Adjacency(list(A_inv), mode="UNDIRECTED", attr="weight", loops=False)
+        btw.append(np.array(G_inv.betweenness(weights='weight', directed=False))*2./((n_nodes-1)*(n_nodes-2)))
+    data['betweenness_centrality'] = np.array(btw)
     return data
 
 def eigenvector_centrality(data):
-    G = ig.Graph.Weighted_Adjacency(list(data['X']), mode="UNDIRECTED",
-                attr="weight", loops=False)
-    data['eigenvector_centrality'] = G.eigenvector_centrality(weights='weight', directed=False)
-    data['eigenvector_centrality'] = np.array(data['eigenvector_centrality'])
+    eigc= []
+    for X in data['X']:
+        G = ig.Graph.Weighted_Adjacency(list(X), mode="UNDIRECTED",
+                    attr="weight", loops=False)
+        eigcX = G.eigenvector_centrality(weights='weight', directed=False)
+        eigc.append(np.array(eigcX))
+    data['eigenvector_centrality'] = np.array(eigc)
     return data
 
 def pagerank(data):
-    G = ig.Graph.Weighted_Adjacency(list(data['X']), mode="DIRECTED", attr="weight", loops=False)
-    data['pagerank'] = np.array(G.pagerank(weights="weight"))
+    pgrnk = []
+    for X in data['X']:
+        G = ig.Graph.Weighted_Adjacency(list(X), mode="DIRECTED", attr="weight", loops=False)
+        pgrnk.append(np.array(G.pagerank(weights="weight")))
+    data['pagerank'] = np.array(pgrnk)
     return data
 
 
 def clustering_coefficient(data):
-    Gnx = nx.from_numpy_matrix(data['X'])
-    data['clustering_coefficient'] = list(nx.clustering(Gnx, weight='weight').values())
-    data['clustering_coefficient'] = np.array(data['clustering_coefficient'])
+    clst_geommean = []
+    for X in data['X']:
+        Gnx = nx.from_numpy_matrix(X)
+        clst_geommeanX = list(nx.clustering(Gnx, weight='weight').values())
+        clst_geommean.append(np.array(clst_geommeanX))
+    data['clustering_coefficient'] = np.array(clst_geommean)
     return data
 
 def triangles(data):
-    clust = clustering_coefficient(data['X'])
+    clust = clustering_coefficient(data)['clustering_coefficient']
+    tr = []
 
-    G = ig.Graph.Weighted_Adjacency(list(data['X']), mode="UNDIRECTED",
-            attr="weight", loops=False)
-    non_weighted_degrees = np.array(G.degree())
-    non_weighted_deg_by_deg_minus_one = np.multiply(non_weighted_degrees,
-            (non_weighted_degrees - 1))
-    data['triangles'] = np.multiply(np.array(clust),
-            np.array(non_weighted_deg_by_deg_minus_one, dtype = float))/2.
+    for X, clustX in zip(data['X'], clust):
+        G = ig.Graph.Weighted_Adjacency(list(X), mode="UNDIRECTED",
+                attr="weight", loops=False)
+        non_weighted_degrees = np.array(G.degree())
+        non_weighted_deg_by_deg_minus_one = np.multiply(non_weighted_degrees,
+                (non_weighted_degrees - 1))
+        tr.append(np.multiply(np.array(clustX),
+                np.array(non_weighted_deg_by_deg_minus_one, dtype = float))/2.)
+    data['triangles'] = np.array(tr)
     return data
 
-
 def efficiency(data):
-    A_inv = 1./data['X']
-    SPL = scipy.sparse.csgraph.dijkstra(A_inv, directed=False, unweighted=False)
-    inv_SPL_with_inf = 1./SPL
-    inv_SPL_with_nan = inv_SPL_with_inf.copy()
-    inv_SPL_with_nan[np.isinf(inv_SPL_with_inf)]=np.nan
-    data['efficiency'] = np.nanmean(inv_SPL_with_nan, 1)
+    efs = []
+    for X in data['X']:
+        A_inv = 1./(X + 1.00000000e-99)
+        SPL = scipy.sparse.csgraph.dijkstra(A_inv, directed=False, unweighted=False)
+        inv_SPL_with_inf = 1./(SPL + 1.00000000e-99)
+        inv_SPL_with_nan = inv_SPL_with_inf.copy()
+        inv_SPL_with_nan[np.isinf(inv_SPL_with_inf)]=np.nan
+        efs.append(np.nanmean(inv_SPL_with_nan, 1))
+    data['efficiency'] = np.array(efs)
     return data
 
 
