@@ -20,40 +20,122 @@ import os
 
 class Pipeliner(object):
     """ 
-    
+    An object which allows you to test different data preprocessing 
+    pipelines and prediction models at once.
+
+    You will need to specify a name of each preprocessing and prediction 
+    step and possible objects performing each step. Then Pipeliner will 
+    combine these steps to different pipelines, excluding forbidden 
+    combinations; perform experiments according to these steps and present
+    results in convenient csv table. For example, for each pipeline's 
+    classifier, Pipeliner will grid search on cross-validation to find best 
+    classifier's parameters and report metric mean and std for each tested 
+    pipeline. Pipeliner also allows you to cache interim calculations to 
+    avoid unnecessary recalculations. 
 
     Parameters:
     -----------
-    steps : list
-        List of (name, transforms) tuples
+    steps : list of tuples
+        List of (step_name, transformers) tuples, where transformers is a 
+        list of tuples (step_transformer_name, transformer). ``Pipeliner`` 
+        will create ``plan_table`` from this ``steps``, combining all 
+        possible combinations of transformers, switching transformers on 
+        each step.
 
     eval_cv : int, cross-validation generator or an iterable, optional
-        Determines the evaluation cross-validation splitting strategy.
+        Determines the evaluation cross-validation splitting strategy. 
         Possible inputs for cv are:
+
             - None, to use the default 3-fold cross validation,
-            - integer, to specify the number of folds in a `(Stratified)KFold`,
+            - integer, to specify the number of folds in a ``(Stratified)KFold``,
             - An object to be used as cross-validation generator.
-            - An iterable yielding train, test splits.
+            - A list or iterable yielding train, test splits.
 
-        For integer/None inputs, if the estimator is a classifier and ``y`` is
-        either binary or multiclass, :class:`StratifiedKFold` is used. In all
-        other cases, :class:`KFold` is used.
+        For integer/None inputs, if the estimator is a classifier and ``y`` 
+        is either binary or multiclass, StratifiedKFold_ is used. In all 
+        other cases, KFold_ is used.
 
-        Refer :ref:`User Guide <cross_validation>` for the various
-        cross-validation strategies that can be used here.
+        Refer User Guide_ for the various cross-validation strategies that 
+        can be used here.
+
+.. _StratifiedKFold: http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
+.. _KFold: http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.KFold.html#sklearn.model_selection.KFold
+.. _Guide: http://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
 
     grid_cv : int, cross-validation generator or an iterable, optional
-         
-    param_grid : 
+         Determines the grid search cross-validation splitting strategy. 
+         Possible inputs for cv are the same as for ``eval_cv``.
 
-    banned_combos : 
-        
+    param_grid : dict of dictionaries
+        Dictionary with classifiers names (string) as keys. The keys are 
+        possible classifiers names in ``steps``. Each key corresponds to 
+        grid search parameters.
+
+    banned_combos : list of tuples
+        List of (transformer_name_1, transformer_name_2) tuples. Each row 
+        with both this transformers will be removed from ``plan_table``.
+
     Attributes:
     -----------
+    plan_table : pandas DataFrame
+        Plan of pipelines evaluation. Created from ``steps``.
+   
+        +---------------+---------------+-----+-------------+
+        |  setp_name_1  |  step_name_2  | ... | step_name_n |
+        +---------------+---------------+-----+-------------+
+        | transformer11 | transformer21 | ... | classifier1 |
+        +---------------+---------------+-----+-------------+
+        | transformer11 | transformer21 | ... | classifier2 |
+        +---------------+---------------+-----+-------------+
+        | transformer11 | transformer22 | ... | classifier1 |
+        +---------------+---------------+-----+-------------+
+        | transformer11 | transformer22 | ... | classifier2 |
+        +---------------+---------------+-----+-------------+
+        | transformer11 | transformer23 | ... | classifier1 |
+        +---------------+---------------+-----+-------------+
+        | transformer11 | transformer23 | ... | classifier2 |
+        +---------------+---------------+-----+-------------+
+        | transformer12 | transformer21 | ... | classifier1 |
+        +---------------+---------------+-----+-------------+
+        |      ...      |      ...      | ... |     ...     |
+        +---------------+---------------+-----+-------------+
+
+
+    named_steps: dict of dictionaries
+        Dictionary with steps names as keys. Each key corresponds to 
+        dictionary with transformers names from ``steps`` as keys. 
+        You can get any transformer object from this dictionary.
 
     Examples:
     ---------
 
+.. code-block:: python
+
+    from sklearn.datasets import make_classification
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.preprocessing import MinMaxScaler
+    from sklearn.model_selection import StratifiedKFold
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.svm import SVC
+    from reskit.core import Pipeliner
+
+    X, y = make_classification()
+    data = {'X': X, 'y': y}
+
+    scalers = [('minmax', MinMaxScaler()), ('standard', StandardScaler())]
+    classifiers = [('LR', LogisticRegression()), ('SVC', SVC())]
+    steps = [('Scaler', scalers), ('Classifier', classifiers)]
+
+    grid_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+    eval_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=1)
+
+    param_grid = {'LR' : {'penalty' : ['l1', 'l2']},
+                  'SVC' : {'kernel' : ['linear', 'poly', 'rbf', 'sigmoid']}}
+
+    pipe = Pipeliner(steps, eval_cv=eval_cv, grid_cv=grid_cv, param_grid=param_grid)
+    pipe.plan_table
+
+    pipe.get_results(data=data, grid_cv=grid_cv, eval_cv=eval_cv, scoring=['roc_auc'])
     """
     def __init__(self, steps, eval_cv=None, grid_cv=None, param_grid=dict(),
             banned_combos=list()):
@@ -90,215 +172,40 @@ class Pipeliner(object):
         self.best_params = dict()
         self.scores = dict()
 
-    def transform_with_caching(self, data, row_keys):
-        """
-        Sequentially apply a list of transforms to an input data.
-
-        Parameters:
-        -----------
-        data : any
-            A data, to which you want to apply transformations.
-
-        row_keys : list
-            Keys of transformations.
-
-        Returns:
-        --------
-        transformed_data : any
-            A data transformed with all specified transformations.
-
-        """
-        columns = list(self.plan_table.columns[:len(row_keys)])
-
-        def remove_unmatched_caching_data(row_keys):
-            cached_keys = list(self._cached_data)
-            unmatched_caching_keys = cached_keys.copy()
-            for row_key, cached_key in zip(row_keys, cached_keys):
-                if not row_key == cached_key:
-                    break
-                unmatched_caching_keys.remove(row_key)
-
-            for unmatched_caching_key in unmatched_caching_keys:
-                del self._cached_data[unmatched_caching_key]
-
-        def transform_data_from_last_cached(row_keys, columns):
-            prev_key = list(self._cached_data)[-1]
-            for row_key, column in zip(row_keys, columns):
-                transformer = self.named_steps[column][row_key]
-                data = self._cached_data[prev_key]
-                self._cached_data[row_key] = transformer.fit_transform(data)
-                prev_key = row_key
-
-        if 'init' not in self._cached_data:
-            self._cached_data['init'] = data
-            transform_data_from_last_cached(row_keys, columns)
-        else:
-            row_keys = ['init'] + row_keys
-            columns = ['init'] + columns
-            remove_unmatched_caching_data(row_keys)
-            cached_keys = list(self._cached_data)
-            cached_keys_length = len(cached_keys)
-            for i in range(cached_keys_length):
-                del row_keys[0]
-                del columns[0]
-            transform_data_from_last_cached(row_keys, columns)
-
-        last_cached_key = list(self._cached_data)[-1]
-
-        return self._cached_data[last_cached_key]
-
-    def get_grid_search_results(self, X, y, row_keys, scoring):
-        """
-        Give results with tuned parameters of a specified pipeline using grid search. 
-
-        Parameters:
-        -----------
-        X : array-like, shape (n_samples, n_features)
-            Training vectors, where n_samples is the number of samples and n_features is the number of features. 
-            For kernel=”precomputed”, the expected shape of X is (n_samples, n_samples). 
-
-        y : array-like, shape (n_samples,)
-            Target values (class labels in classification, real numbers in regression)
-        
-        row_keys : list
-            Keys of transformations.
-
-        scoring : list or str
-            Name of a scoring method.
-            If None, the score method of the estimator is used.
-
-        Returns:
-        --------
-        results : dict
-            Results dictionary.
-        """
-        classifier_key = row_keys[-1]
-        if classifier_key in self.param_grid:
-            columns = list(self.plan_table.columns)[-len(row_keys):]
-
-            steps = list()
-            for row_key, column in zip(row_keys, columns):
-                steps.append((row_key, self.named_steps[column][row_key]))
-
-            param_grid = dict()
-            for key, value in self.param_grid[classifier_key].items():
-                param_grid['{}__{}'.format(classifier_key, key)] = value
-
-            self.asdf = param_grid
-            self.asdfasdf = self.param_grid[classifier_key]
-
-            grid_clf = GridSearchCV(estimator=Pipeline(steps),
-                                    param_grid=param_grid,
-                                    scoring=scoring,
-                                    n_jobs=-1,
-                                    cv=self.grid_cv)
-            grid_clf.fit(X, y)
-
-            best_params = dict()
-            classifier_key_len = len(classifier_key)
-            for key, value in grid_clf.best_params_.items():
-                key = key[classifier_key_len + 2:]
-                best_params[key] = value
-            param_key = ''.join(row_keys) + str(scoring)
-            self.best_params[param_key] = best_params
-
-            results = dict()
-            for i, params in enumerate(grid_clf.cv_results_['params']):
-                if params == grid_clf.best_params_:
-
-                    k = 'grid_{}_mean'.format(scoring)
-                    results[k] = grid_clf.cv_results_['mean_test_score'][i]
-
-                    k = 'grid_{}_std'.format(scoring)
-                    results[k] = grid_clf.cv_results_['std_test_score'][i]
-
-                    k = 'grid_{}_best_params'.format(scoring)
-                    results[k] = str(best_params)
-
-            return results
-        else:
-            param_key = ''.join(row_keys) + str(scoring)
-            self.best_params[param_key] = dict()
-            results = dict()
-            results['grid_{}_mean'.format(scoring)] = 'NaN'
-            results['grid_{}_std'.format(scoring)] = 'NaN'
-            results['grid_{}_best_params'.format(scoring)] = 'NaN'
-            return results
-
-    def get_scores(self, X, y, row_keys, scoring, collect_n=None):
-        """
-        
-
-        Parameters:
-        -----------
-
-        X : 
-
-        y : 
-
-        row_keys : 
-
-        scoring : 
-
-        collect_n :
-
-
-        Returns:
-        --------
-
-        """
-        columns = list(self.plan_table.columns)[-len(row_keys):]
-        param_key = ''.join(row_keys) + str(scoring)
-
-        steps = list()
-        for row_key, column in zip(row_keys, columns):
-            steps.append((row_key, self.named_steps[column][row_key]))
-
-        steps[-1][1].set_params(**self.best_params[param_key])
-
-        if not collect_n:
-            scores = cross_val_score(Pipeline(steps), X, y,
-                                     scoring=scoring,
-                                     cv=self.eval_cv,
-                                     n_jobs=-1)
-        else:
-            init_random_state = self.eval_cv.random_state
-            scores = list()
-            for i in range(collect_n):
-                fold_prediction = cross_val_predict(Pipeline(steps), X, y,
-                                                     cv=self.eval_cv,
-                                                     n_jobs=-1)
-                metric = check_scoring(steps[-1][1],
-                                    scoring=scoring).__dict__['_score_func']
-                scores.append(metric(y, fold_prediction))
-                self.eval_cv.random_state += 1
-
-            self.eval_cv.random_state = init_random_state
-        return scores
-
     def get_results(self, data, caching_steps=list(), scoring='accuracy',
-            results_file='results.csv', logs_file='results.log', collect_n=None):
+            logs_file='results.log', collect_n=None):
         """ 
-
+        Gives results dataframe by defined pipelines.
 
         Parameters:
         -----------
-        data : 
+        data : any type transformer can handle
+            Data you want to use
 
-        caching_steps : 
+        caching_steps : list of strings
+            Steps which won’t be recalculated for each new pipeline. 
+            If in previous pipeline exists the same steps ``Pipeliner`` 
+            will start from this step.
+            
+        scoring : string, callable or None, default=None
+            A string (see model evaluation documentation) or a scorer 
+            callable object / function with signature 
+            ``scorer(estimator, X, y)``. If None, the score method of 
+            the estimator is used.
+            
+        logs_file : string
+            File name where logs will be saved.
 
-        scoring : 
-
-        results_file : 
-
-        logs_file : 
-        
-        collect_n :
-
+        collect_n : int 
+            If not None scores will be calculated in following way. Each 
+            score will be corresponds to average score on cross-validation 
+            scores. The only thing that is changing for each score is 
+            random_state, it shifts.
 
         Returns:
         --------
-
+        results : DataFrame
+            Dataframe with all results about pipelines.
         """
         if type(scoring) == str:
             scoring = [scoring]
@@ -319,14 +226,6 @@ class Pipeliner(object):
             columns += grid_steps + eval_steps
 
         results = DataFrame(columns=columns)
-
-        try:
-            os.remove(results_file)
-            print('Removed previous results file -- {}.'.format(results_file))
-        except:
-            print('No previous results found.')
-        if results_file != None:
-            results.to_csv(results_file)
 
         columns = list(self.plan_table.columns)
         results[columns] = self.plan_table
@@ -385,27 +284,236 @@ class Pipeliner(object):
                     scores_key = 'eval_{}_scores'.format(metric)
                     results.loc[idx][scores_key] = str(scores)
                     logs.write('Scores: {}\n\n'.format(str(scores)))
-                results.loc[[idx]].to_csv(results_file, header=False, mode='a+')
 
         return results
+
+    def transform_with_caching(self, data, row_keys):
+        """
+        Takes ``data`` and sends in to pipeliner from ``plan_table`` with 
+        transformers names as in ``row_keys`` list.
+
+        Parameters:
+        -----------
+        data : any type transformer can handle
+            A data on which you want to transform using transformers 
+            from ``named_steps``.
+
+        row_keys : list of strings
+            List of transformers names. ``Pipeliner`` takes 
+            transformers from ``named_steps`` using keys from 
+            ``row_keys`` and creates pipeline to transform.
+
+        Returns:
+        --------
+        transformed_data : (X, y) tuple, where X and y array-like
+            Data transformed corresponding to pipeline, created from 
+            ``row_keys``, to (X, y) tuple.
+        """
+        columns = list(self.plan_table.columns[:len(row_keys)])
+
+        def remove_unmatched_caching_data(row_keys):
+            cached_keys = list(self._cached_data)
+            unmatched_caching_keys = cached_keys.copy()
+            for row_key, cached_key in zip(row_keys, cached_keys):
+                if not row_key == cached_key:
+                    break
+                unmatched_caching_keys.remove(row_key)
+
+            for unmatched_caching_key in unmatched_caching_keys:
+                del self._cached_data[unmatched_caching_key]
+
+        def transform_data_from_last_cached(row_keys, columns):
+            prev_key = list(self._cached_data)[-1]
+            for row_key, column in zip(row_keys, columns):
+                transformer = self.named_steps[column][row_key]
+                data = self._cached_data[prev_key]
+                self._cached_data[row_key] = transformer.fit_transform(data)
+                prev_key = row_key
+
+        if 'init' not in self._cached_data:
+            self._cached_data['init'] = data
+            transform_data_from_last_cached(row_keys, columns)
+        else:
+            row_keys = ['init'] + row_keys
+            columns = ['init'] + columns
+            remove_unmatched_caching_data(row_keys)
+            cached_keys = list(self._cached_data)
+            cached_keys_length = len(cached_keys)
+            for i in range(cached_keys_length):
+                del row_keys[0]
+                del columns[0]
+            transform_data_from_last_cached(row_keys, columns)
+
+        last_cached_key = list(self._cached_data)[-1]
+
+        return self._cached_data[last_cached_key]
+
+    def get_grid_search_results(self, X, y, row_keys, scoring):
+        """
+        Make grid search for pipeline, created from ``row_keys`` for 
+        defined ``scoring``.
+
+        Parameters:
+        -----------
+        X : array-like, shape = [n_samples, n_features]
+            Training vector, where n_samples is the number of samples and 
+            n_features is the number of features.
+
+        y : array-like, shape = [n_samples] or [n_samples, n_output], optional
+            Target relative to X for classification or regression; None 
+            for unsupervised learning.
+
+        row_keys : list of strings
+            List of transformers names. ``Pipeliner`` takes transformers 
+            from ``named_steps`` using keys from ``row_keys`` and creates 
+            pipeline to transform.
+
+        scoring : string, callable or None, default=None
+            A string (see model evaluation documentation) or a scorer 
+            callable object / function with signature 
+            ``scorer(estimator, X, y)``. If None, the score method of the 
+            estimator is used.
+
+        Returns:
+        --------
+        results : dict
+            Dictionary with keys: ‘grid_{}_mean’, ‘grid_{}_std’ and 
+            ‘grid_{}_best_params’. In the middle of keys will be 
+            corresponding scoring.
+        """
+        classifier_key = row_keys[-1]
+        if classifier_key in self.param_grid:
+            columns = list(self.plan_table.columns)[-len(row_keys):]
+
+            steps = list()
+            for row_key, column in zip(row_keys, columns):
+                steps.append((row_key, self.named_steps[column][row_key]))
+
+            param_grid = dict()
+            for key, value in self.param_grid[classifier_key].items():
+                param_grid['{}__{}'.format(classifier_key, key)] = value
+
+            self.asdf = param_grid
+            self.asdfasdf = self.param_grid[classifier_key]
+
+            grid_clf = GridSearchCV(estimator=Pipeline(steps),
+                                    param_grid=param_grid,
+                                    scoring=scoring,
+                                    n_jobs=-1,
+                                    cv=self.grid_cv)
+            grid_clf.fit(X, y)
+
+            best_params = dict()
+            classifier_key_len = len(classifier_key)
+            for key, value in grid_clf.best_params_.items():
+                key = key[classifier_key_len + 2:]
+                best_params[key] = value
+            param_key = ''.join(row_keys) + str(scoring)
+            self.best_params[param_key] = best_params
+
+            results = dict()
+            for i, params in enumerate(grid_clf.cv_results_['params']):
+                if params == grid_clf.best_params_:
+
+                    k = 'grid_{}_mean'.format(scoring)
+                    results[k] = grid_clf.cv_results_['mean_test_score'][i]
+
+                    k = 'grid_{}_std'.format(scoring)
+                    results[k] = grid_clf.cv_results_['std_test_score'][i]
+
+                    k = 'grid_{}_best_params'.format(scoring)
+                    results[k] = str(best_params)
+
+            return results
+        else:
+            param_key = ''.join(row_keys) + str(scoring)
+            self.best_params[param_key] = dict()
+            results = dict()
+            results['grid_{}_mean'.format(scoring)] = 'NaN'
+            results['grid_{}_std'.format(scoring)] = 'NaN'
+            results['grid_{}_best_params'.format(scoring)] = 'NaN'
+            return results
+
+    def get_scores(self, X, y, row_keys, scoring, collect_n=None):
+        """
+        Gives scores for prediction on cross-validation.
+
+        Parameters:
+        -----------
+        X : array-like, shape = [n_samples, n_features]
+            Training vector, where n_samples is the number of samples and 
+            n_features is the number of features.
+
+        y : array-like, shape = [n_samples] or [n_samples, n_output], optional
+            Target relative to X for classification or regression; None 
+            for unsupervised learning.
+
+        row_keys : list of strings
+            List of transformers names. ``Pipeliner`` takes transformers 
+            from ``named_steps`` using keys from ``row_keys`` and creates 
+            pipeline to transform.
+
+        scoring : string, callable or None, default=None
+            A string (see model evaluation documentation) or a scorer 
+            callable object / function with signature 
+            ``scorer(estimator, X, y)``. If None, the score method of the 
+            estimator is used.
+
+        collect_n : list of strings
+            List of keys from data dictionary you want to collect and 
+            create feature vectors.
+
+        Returns:
+        --------
+        scores : array-like
+            Scores calculated on cross-validation.
+        """
+        columns = list(self.plan_table.columns)[-len(row_keys):]
+        param_key = ''.join(row_keys) + str(scoring)
+
+        steps = list()
+        for row_key, column in zip(row_keys, columns):
+            steps.append((row_key, self.named_steps[column][row_key]))
+
+        steps[-1][1].set_params(**self.best_params[param_key])
+
+        if not collect_n:
+            scores = cross_val_score(Pipeline(steps), X, y,
+                                     scoring=scoring,
+                                     cv=self.eval_cv,
+                                     n_jobs=-1)
+        else:
+            init_random_state = self.eval_cv.random_state
+            scores = list()
+            for i in range(collect_n):
+                fold_prediction = cross_val_predict(Pipeline(steps), X, y,
+                                                     cv=self.eval_cv,
+                                                     n_jobs=-1)
+                metric = check_scoring(steps[-1][1],
+                                    scoring=scoring).__dict__['_score_func']
+                scores.append(metric(y, fold_prediction))
+                self.eval_cv.random_state += 1
+
+            self.eval_cv.random_state = init_random_state
+        return scores
+
 
 
 
 class Transformer(TransformerMixin, BaseEstimator):
     """
-
+    Helps to add you own transformation through usual functions.
 
     Parameters:
     -----------
-    func : 
+    func : function
+        Function that transforms input data.
 
-    params : 
+    params : dict
+        Parameters for the function.
 
-    collect : 
-
-    Attributes:
-    -----------
-
+    collect : list of strings
+        Takes values by keys in collect from input data dictionary.
     """
     def __init__(self, func, params=None, collect=None):
         self.func = func
@@ -414,28 +522,25 @@ class Transformer(TransformerMixin, BaseEstimator):
 
     def fit(self, data, target=None, **fit_params):
         """
-        
+        Fits the data.
 
         Parameters:
         -----------
-        data : 
-
-        Returns:
-        --------
-
+        data : dict
+            Dictionary with keys ``X`` and ``y``. You can store other 
+            needed staff here.
         """
         return self
 
     def transform(self, data):
         """
-
+        Transforms the data according to function you set.
 
         Parameters:
         -----------
-        data : 
-
-        Returns:
-        --------
+        data : dict
+            Dictionary with keys ``X`` and ``y``. You can store other 
+            needed staff here.
         """
         if type(data) == dict:
             data = data.copy()
