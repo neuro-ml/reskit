@@ -15,7 +15,7 @@ Reskit is intended to provide
   * graph's matrix norms and metrics
 
 Getting started: A Short Introduction to Reskit
----------------------------------------------
+-----------------------------------------------
 
 Let's say we have two datasets, and we want to compare some pipelines on
 this datasets. Machine learning pipelines represent a list of transforms

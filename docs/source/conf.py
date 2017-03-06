@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Reskit documentation build configuration file, created by
-# sphinx-quickstart on Thu Feb  9 23:54:25 2017.
+# reskit documentation build configuration file, created by
+# sphinx-quickstart on Mon Mar  6 19:25:21 2017.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -19,9 +19,9 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../'))
-
+sys.path.insert(0, os.path.abspath('../..'))
 import reskit
+import sphinx_rtd_theme
 
 
 # -- General configuration ------------------------------------------------
@@ -33,16 +33,15 @@ import reskit
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.autosummary'
-    ]
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.doctest',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.linkcode',
+              'numpydoc']
 
-# Generate autosummary pages
-autosummary_generate=True
+# see http://stackoverflow.com/q/12206334/562769
+numpydoc_show_class_members = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -53,16 +52,13 @@ templates_path = ['_templates']
 # source_suffix = ['.rst', '.md']
 source_suffix = '.rst'
 
-# The encoding of source files.
-source_encoding = 'utf-8'
-
 # The master toctree document.
 master_doc = 'index'
 
 # General information about the project.
-project = 'Reskit'
-copyright = '2017, Reskit Developers'
-author = 'Reskit Developers'
+project = 'reskit'
+copyright = '2017, Alexander Ivanov, Dmitry Petrov'
+author = 'Alexander Ivanov, Dmitry Petrov'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -97,10 +93,7 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-import sphinx_rtd_theme
-
 html_theme = 'sphinx_rtd_theme'
-
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -118,7 +111,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Reskitdoc'
+htmlhelp_basename = 'reskitdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -145,7 +138,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Reskit.tex', 'Reskit Documentation',
+    (master_doc, 'reskit.tex', 'reskit Documentation',
      'Alexander Ivanov, Dmitry Petrov', 'manual'),
 ]
 
@@ -155,7 +148,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'reskit', 'Reskit Documentation',
+    (master_doc, 'reskit', 'reskit Documentation',
      [author], 1)
 ]
 
@@ -166,10 +159,30 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'Reskit', 'Reskit Documentation',
-     author, 'Reskit', 'One line description of project.',
+    (master_doc, 'reskit', 'reskit Documentation',
+     author, 'reskit', 'One line description of project.',
      'Miscellaneous'),
 ]
 
+def linkcode_resolve(domain, info):
+    def find_source():
+        # try to find the file and line number, based on code from numpy:
+        # https://github.com/numpy/numpy/blob/master/doc/source/conf.py#L286
+        obj = sys.modules[info['module']]
+        for part in info['fullname'].split('.'):
+            obj = getattr(obj, part)
+        import inspect
+        import os
+        fn = inspect.getsourcefile(obj)
+        fn = os.path.relpath(fn, start=os.path.dirname(reskit.__file__))
+        source, lineno = inspect.getsourcelines(obj)
+        return fn, lineno, lineno + len(source) - 1
 
-
+    if domain != 'py' or not info['module']:
+        return None
+    try:
+        filename = 'reskit/%s#L%d-L%d' % find_source()
+    except Exception:
+        filename = info['module'].replace('.', '/') + '.py'
+    tag = 'master' if 'dev' in release else ('v' + release)
+    return "https://github.com/neuro-ml/reskit/blob/%s/%s" % (tag, filename)

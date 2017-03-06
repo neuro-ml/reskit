@@ -13,7 +13,6 @@ classification problem.
 
   from sklearn.datasets import make_classification
 
-
   X, y = make_classification()
   data = {'X': X, 'y': y}
 

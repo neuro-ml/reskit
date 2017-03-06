@@ -1,7 +1,3 @@
-.. Reskit documentation master file, created by
-   sphinx-quickstart on Thu Feb  9 23:54:25 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 =====================================================================
 Reskit: Researcher Kit for Reproducible Machine Learning Experiments.
 =====================================================================
@@ -12,10 +8,9 @@ Reskit: Researcher Kit for Reproducible Machine Learning Experiments.
 
   overview
   tutorial/index
-  reference/index
-  contributing
-  development
-
+  modules/core.rst
+  modules/features.rst
+  modules/norms.rst
 
 Indices and tables
 ==================
@@ -23,3 +18,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
