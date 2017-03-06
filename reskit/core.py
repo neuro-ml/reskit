@@ -19,31 +19,31 @@ import os
 
 
 class Pipeliner(object):
-    """ 
-    An object which allows you to test different data preprocessing 
+    """
+    An object which allows you to test different data preprocessing
     pipelines and prediction models at once.
 
-    You will need to specify a name of each preprocessing and prediction 
-    step and possible objects performing each step. Then Pipeliner will 
-    combine these steps to different pipelines, excluding forbidden 
+    You will need to specify a name of each preprocessing and prediction
+    step and possible objects performing each step. Then Pipeliner will
+    combine these steps to different pipelines, excluding forbidden
     combinations; perform experiments according to these steps and present
-    results in convenient csv table. For example, for each pipeline's 
-    classifier, Pipeliner will grid search on cross-validation to find best 
-    classifier's parameters and report metric mean and std for each tested 
-    pipeline. Pipeliner also allows you to cache interim calculations to 
-    avoid unnecessary recalculations. 
+    results in convenient csv table. For example, for each pipeline's
+    classifier, Pipeliner will grid search on cross-validation to find best
+    classifier's parameters and report metric mean and std for each tested
+    pipeline. Pipeliner also allows you to cache interim calculations to
+    avoid unnecessary recalculations.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     steps : list of tuples
-        List of (step_name, transformers) tuples, where transformers is a 
-        list of tuples (step_transformer_name, transformer). ``Pipeliner`` 
-        will create ``plan_table`` from this ``steps``, combining all 
-        possible combinations of transformers, switching transformers on 
+        List of (step_name, transformers) tuples, where transformers is a
+        list of tuples (step_transformer_name, transformer). ``Pipeliner``
+        will create ``plan_table`` from this ``steps``, combining all
+        possible combinations of transformers, switching transformers on
         each step.
 
     eval_cv : int, cross-validation generator or an iterable, optional
-        Determines the evaluation cross-validation splitting strategy. 
+        Determines the evaluation cross-validation splitting strategy.
         Possible inputs for cv are:
 
             - None, to use the default 3-fold cross validation,
@@ -51,94 +51,65 @@ class Pipeliner(object):
             - An object to be used as cross-validation generator.
             - A list or iterable yielding train, test splits.
 
-        For integer/None inputs, if the estimator is a classifier and ``y`` 
-        is either binary or multiclass, StratifiedKFold_ is used. In all 
-        other cases, KFold_ is used.
+        For integer/None inputs, if the estimator is a classifier and ``y``
+        is either binary or multiclass, ``StratifiedKFold`` is used. In all
+        other cases, ``KFold`` is used.
 
-        Refer User Guide_ for the various cross-validation strategies that 
+        Refer scikit-learn ``User Guide`` for the various cross-validation strategies that
         can be used here.
 
-.. _StratifiedKFold: http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
-.. _KFold: http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.KFold.html#sklearn.model_selection.KFold
-.. _Guide: http://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
-
     grid_cv : int, cross-validation generator or an iterable, optional
-         Determines the grid search cross-validation splitting strategy. 
+         Determines the grid search cross-validation splitting strategy.
          Possible inputs for cv are the same as for ``eval_cv``.
 
     param_grid : dict of dictionaries
-        Dictionary with classifiers names (string) as keys. The keys are 
-        possible classifiers names in ``steps``. Each key corresponds to 
+        Dictionary with classifiers names (string) as keys. The keys are
+        possible classifiers names in ``steps``. Each key corresponds to
         grid search parameters.
 
     banned_combos : list of tuples
-        List of (transformer_name_1, transformer_name_2) tuples. Each row 
+        List of (transformer_name_1, transformer_name_2) tuples. Each row
         with both this transformers will be removed from ``plan_table``.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     plan_table : pandas DataFrame
         Plan of pipelines evaluation. Created from ``steps``.
-   
-        +---------------+---------------+-----+-------------+
-        |  setp_name_1  |  step_name_2  | ... | step_name_n |
-        +---------------+---------------+-----+-------------+
-        | transformer11 | transformer21 | ... | classifier1 |
-        +---------------+---------------+-----+-------------+
-        | transformer11 | transformer21 | ... | classifier2 |
-        +---------------+---------------+-----+-------------+
-        | transformer11 | transformer22 | ... | classifier1 |
-        +---------------+---------------+-----+-------------+
-        | transformer11 | transformer22 | ... | classifier2 |
-        +---------------+---------------+-----+-------------+
-        | transformer11 | transformer23 | ... | classifier1 |
-        +---------------+---------------+-----+-------------+
-        | transformer11 | transformer23 | ... | classifier2 |
-        +---------------+---------------+-----+-------------+
-        | transformer12 | transformer21 | ... | classifier1 |
-        +---------------+---------------+-----+-------------+
-        |      ...      |      ...      | ... |     ...     |
-        +---------------+---------------+-----+-------------+
-
 
     named_steps: dict of dictionaries
-        Dictionary with steps names as keys. Each key corresponds to 
-        dictionary with transformers names from ``steps`` as keys. 
+        Dictionary with steps names as keys. Each key corresponds to
+        dictionary with transformers names from ``steps`` as keys.
         You can get any transformer object from this dictionary.
 
-    Examples:
-    ---------
+    Examples
+    --------
+    >>> from sklearn.datasets import make_classification
+    >>> from sklearn.preprocessing import StandardScaler
+    >>> from sklearn.preprocessing import MinMaxScaler
+    >>> from sklearn.model_selection import StratifiedKFold
+    >>> from sklearn.linear_model import LogisticRegression
+    >>> from sklearn.svm import SVC
+    >>> from reskit.core import Pipeliner
 
-.. code-block:: python
+    >>> X, y = make_classification()
+    >>> data = {'X': X, 'y': y}
 
-    from sklearn.datasets import make_classification
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.preprocessing import MinMaxScaler
-    from sklearn.model_selection import StratifiedKFold
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.svm import SVC
-    from reskit.core import Pipeliner
+    >>> scalers = [('minmax', MinMaxScaler()), ('standard', StandardScaler())]
+    >>> classifiers = [('LR', LogisticRegression()), ('SVC', SVC())]
+    >>> steps = [('Scaler', scalers), ('Classifier', classifiers)]
 
-    X, y = make_classification()
-    data = {'X': X, 'y': y}
+    >>> grid_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+    >>> eval_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=1)
 
-    scalers = [('minmax', MinMaxScaler()), ('standard', StandardScaler())]
-    classifiers = [('LR', LogisticRegression()), ('SVC', SVC())]
-    steps = [('Scaler', scalers), ('Classifier', classifiers)]
+    >>> param_grid = {'LR' : {'penalty' : ['l1', 'l2']},
+    >>>               'SVC' : {'kernel' : ['linear', 'poly', 'rbf', 'sigmoid']}}
 
-    grid_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
-    eval_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=1)
-
-    param_grid = {'LR' : {'penalty' : ['l1', 'l2']},
-                  'SVC' : {'kernel' : ['linear', 'poly', 'rbf', 'sigmoid']}}
-
-    pipe = Pipeliner(steps, eval_cv=eval_cv, grid_cv=grid_cv, param_grid=param_grid)
-    pipe.plan_table
-
-    pipe.get_results(data=data, grid_cv=grid_cv, eval_cv=eval_cv, scoring=['roc_auc'])
+    >>> pipe = Pipeliner(steps, eval_cv=eval_cv, grid_cv=grid_cv, param_grid=param_grid)
+    >>> pipe.get_results(data=data, grid_cv=grid_cv, eval_cv=eval_cv, scoring=['roc_auc'])
     """
+
     def __init__(self, steps, eval_cv=None, grid_cv=None, param_grid=dict(),
-            banned_combos=list()):
+                 banned_combos=list()):
         steps = OrderedDict(steps)
         columns = list(steps)
         for column in columns:
@@ -173,46 +144,46 @@ class Pipeliner(object):
         self.scores = dict()
 
     def get_results(self, data, caching_steps=list(), scoring='accuracy',
-            logs_file='results.log', collect_n=None):
-        """ 
+                    logs_file='results.log', collect_n=None):
+        """
         Gives results dataframe by defined pipelines.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : any type transformer can handle
             Data you want to use
 
         caching_steps : list of strings
-            Steps which won’t be recalculated for each new pipeline. 
-            If in previous pipeline exists the same steps ``Pipeliner`` 
+            Steps which won’t be recalculated for each new pipeline.
+            If in previous pipeline exists the same steps ``Pipeliner``
             will start from this step.
-            
+
         scoring : string, callable or None, default=None
-            A string (see model evaluation documentation) or a scorer 
-            callable object / function with signature 
-            ``scorer(estimator, X, y)``. If None, the score method of 
+            A string (see model evaluation documentation) or a scorer
+            callable object / function with signature
+            ``scorer(estimator, X, y)``. If None, the score method of
             the estimator is used.
-            
+
         logs_file : string
             File name where logs will be saved.
 
-        collect_n : int 
-            If not None scores will be calculated in following way. Each 
-            score will be corresponds to average score on cross-validation 
-            scores. The only thing that is changing for each score is 
+        collect_n : int
+            If not None scores will be calculated in following way. Each
+            score will be corresponds to average score on cross-validation
+            scores. The only thing that is changing for each score is
             random_state, it shifts.
 
-        Returns:
-        --------
+        Returns
+        -------
         results : DataFrame
             Dataframe with all results about pipelines.
         """
-        if type(scoring) == str:
+        if isinstance(scoring, str):
             scoring = [scoring]
 
         columns = list(self.plan_table.columns)
         without_caching = [step for step in columns
-                                if step not in caching_steps]
+                           if step not in caching_steps]
 
         for metric in scoring:
             grid_steps = ['grid_{}_mean'.format(metric),
@@ -230,7 +201,6 @@ class Pipeliner(object):
         columns = list(self.plan_table.columns)
         results[columns] = self.plan_table
 
-
         with open(logs_file, 'w+') as logs:
             N = len(self.plan_table.index)
             for idx in self.plan_table.index:
@@ -242,7 +212,8 @@ class Pipeliner(object):
 
                 time_point = time()
                 if caching_keys != []:
-                    X_featured, y = self.transform_with_caching(data, caching_keys)
+                    X_featured, y = self.transform_with_caching(
+                        data, caching_keys)
                 else:
                     X_featured = data['X']
                     y = data['y']
@@ -289,24 +260,24 @@ class Pipeliner(object):
 
     def transform_with_caching(self, data, row_keys):
         """
-        Takes ``data`` and sends in to pipeliner from ``plan_table`` with 
+        Takes ``data`` and sends in to pipeliner from ``plan_table`` with
         transformers names as in ``row_keys`` list.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : any type transformer can handle
-            A data on which you want to transform using transformers 
+            A data on which you want to transform using transformers
             from ``named_steps``.
 
         row_keys : list of strings
-            List of transformers names. ``Pipeliner`` takes 
-            transformers from ``named_steps`` using keys from 
+            List of transformers names. ``Pipeliner`` takes
+            transformers from ``named_steps`` using keys from
             ``row_keys`` and creates pipeline to transform.
 
-        Returns:
-        --------
+        Returns
+        -------
         transformed_data : (X, y) tuple, where X and y array-like
-            Data transformed corresponding to pipeline, created from 
+            Data transformed corresponding to pipeline, created from
             ``row_keys``, to (X, y) tuple.
         """
         columns = list(self.plan_table.columns[:len(row_keys)])
@@ -350,35 +321,35 @@ class Pipeliner(object):
 
     def get_grid_search_results(self, X, y, row_keys, scoring):
         """
-        Make grid search for pipeline, created from ``row_keys`` for 
+        Make grid search for pipeline, created from ``row_keys`` for
         defined ``scoring``.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         X : array-like, shape = [n_samples, n_features]
-            Training vector, where n_samples is the number of samples and 
+            Training vector, where n_samples is the number of samples and
             n_features is the number of features.
 
         y : array-like, shape = [n_samples] or [n_samples, n_output], optional
-            Target relative to X for classification or regression; None 
+            Target relative to X for classification or regression; None
             for unsupervised learning.
 
         row_keys : list of strings
-            List of transformers names. ``Pipeliner`` takes transformers 
-            from ``named_steps`` using keys from ``row_keys`` and creates 
+            List of transformers names. ``Pipeliner`` takes transformers
+            from ``named_steps`` using keys from ``row_keys`` and creates
             pipeline to transform.
 
         scoring : string, callable or None, default=None
-            A string (see model evaluation documentation) or a scorer 
-            callable object / function with signature 
-            ``scorer(estimator, X, y)``. If None, the score method of the 
+            A string (see model evaluation documentation) or a scorer
+            callable object / function with signature
+            ``scorer(estimator, X, y)``. If None, the score method of the
             estimator is used.
 
-        Returns:
-        --------
+        Returns
+        -------
         results : dict
-            Dictionary with keys: ‘grid_{}_mean’, ‘grid_{}_std’ and 
-            ‘grid_{}_best_params’. In the middle of keys will be 
+            Dictionary with keys: ‘grid_{}_mean’, ‘grid_{}_std’ and
+            ‘grid_{}_best_params’. In the middle of keys will be
             corresponding scoring.
         """
         classifier_key = row_keys[-1]
@@ -438,33 +409,33 @@ class Pipeliner(object):
         """
         Gives scores for prediction on cross-validation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         X : array-like, shape = [n_samples, n_features]
-            Training vector, where n_samples is the number of samples and 
+            Training vector, where n_samples is the number of samples and
             n_features is the number of features.
 
         y : array-like, shape = [n_samples] or [n_samples, n_output], optional
-            Target relative to X for classification or regression; None 
+            Target relative to X for classification or regression; None
             for unsupervised learning.
 
         row_keys : list of strings
-            List of transformers names. ``Pipeliner`` takes transformers 
-            from ``named_steps`` using keys from ``row_keys`` and creates 
+            List of transformers names. ``Pipeliner`` takes transformers
+            from ``named_steps`` using keys from ``row_keys`` and creates
             pipeline to transform.
 
         scoring : string, callable or None, default=None
-            A string (see model evaluation documentation) or a scorer 
-            callable object / function with signature 
-            ``scorer(estimator, X, y)``. If None, the score method of the 
+            A string (see model evaluation documentation) or a scorer
+            callable object / function with signature
+            ``scorer(estimator, X, y)``. If None, the score method of the
             estimator is used.
 
         collect_n : list of strings
-            List of keys from data dictionary you want to collect and 
+            List of keys from data dictionary you want to collect and
             create feature vectors.
 
-        Returns:
-        --------
+        Returns
+        -------
         scores : array-like
             Scores calculated on cross-validation.
         """
@@ -487,10 +458,10 @@ class Pipeliner(object):
             scores = list()
             for i in range(collect_n):
                 fold_prediction = cross_val_predict(Pipeline(steps), X, y,
-                                                     cv=self.eval_cv,
-                                                     n_jobs=-1)
+                                                    cv=self.eval_cv,
+                                                    n_jobs=-1)
                 metric = check_scoring(steps[-1][1],
-                                    scoring=scoring).__dict__['_score_func']
+                                       scoring=scoring).__dict__['_score_func']
                 scores.append(metric(y, fold_prediction))
                 self.eval_cv.random_state += 1
 
@@ -498,14 +469,12 @@ class Pipeliner(object):
         return scores
 
 
-
-
 class Transformer(TransformerMixin, BaseEstimator):
     """
     Helps to add you own transformation through usual functions.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     func : function
         Function that transforms input data.
 
@@ -515,6 +484,7 @@ class Transformer(TransformerMixin, BaseEstimator):
     collect : list of strings
         Takes values by keys in collect from input data dictionary.
     """
+
     def __init__(self, func, params=None, collect=None):
         self.func = func
         self.params = params
@@ -524,10 +494,10 @@ class Transformer(TransformerMixin, BaseEstimator):
         """
         Fits the data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : dict
-            Dictionary with keys ``X`` and ``y``. You can store other 
+            Dictionary with keys ``X`` and ``y``. You can store other
             needed staff here.
         """
         return self
@@ -536,13 +506,13 @@ class Transformer(TransformerMixin, BaseEstimator):
         """
         Transforms the data according to function you set.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : dict
-            Dictionary with keys ``X`` and ``y``. You can store other 
+            Dictionary with keys ``X`` and ``y``. You can store other
             needed staff here.
         """
-        if type(data) == dict:
+        if isinstance(data, dict):
             data = data.copy()
 
         if self.params:
