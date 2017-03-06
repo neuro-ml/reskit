@@ -8,5 +8,5 @@ The third section explains how to use this classes in various use cases.
 
 .. toctree::
 
-  transformers
   pipeliner
+  transformers
