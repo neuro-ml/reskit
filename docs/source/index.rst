@@ -9,9 +9,6 @@ Reskit: Researcher Kit for Reproducible Machine Learning Experiments.
   overview
   tutorial/index
   reference/index
-  modules/core.rst
-  modules/features.rst
-  modules/norms.rst
 
 Indices and tables
 ==================
