@@ -28,7 +28,7 @@ class Pipeliner(object):
     combine these steps to different pipelines, excluding forbidden
     combinations; perform experiments according to these steps and present
     results in convenient csv table. For example, for each pipeline's
-    classifier, Pipeliner will grid search on cross-validation to find best
+    classifier, Pipeliner will grid search on cross-validation to find the best
     classifier's parameters and report metric mean and std for each tested
     pipeline. Pipeliner also allows you to cache interim calculations to
     avoid unnecessary recalculations.
@@ -69,7 +69,7 @@ class Pipeliner(object):
 
     banned_combos : list of tuples
         List of (transformer_name_1, transformer_name_2) tuples. Each row
-        with both this transformers will be removed from ``plan_table``.
+        with both transformers will be removed from ``plan_table``.
 
     Attributes
     ----------
@@ -155,7 +155,7 @@ class Pipeliner(object):
 
         caching_steps : list of strings
             Steps which won’t be recalculated for each new pipeline.
-            If in previous pipeline exists the same steps ``Pipeliner``
+            If in previous pipeline exists the same steps, ``Pipeliner``
             will start from this step.
 
         scoring : string, callable or None, default=None
