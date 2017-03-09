@@ -9,6 +9,10 @@ def degrees(data):
     """
     Degree graph metric.
 
+    Takes dictionary with graphs adjacency matrices by key ``X`` 
+    and returns the same dictionary, but with calculated 
+    graphs degrees vectors by key ``degrees``.
+
     Parameters
     ----------
     data : dict
@@ -32,6 +36,10 @@ def degrees(data):
 def closeness_centrality(data):
     """
     Closeness centrality graph metric.
+
+    Takes dictionary with graphs adjacency matrices by key ``X``
+    and returns the same dictionary, but with calculated
+    graphs closeness centrality vectors by key ``closeness_centrality``.
 
     Parameters
     ----------
@@ -60,6 +68,10 @@ def betweenness_centrality(data):
     """
     Betweenness centrality graph metric.
 
+    Takes dictionary with graphs adjacency matrices by key ``X``
+    and returns the same dictionary, but with calculated
+    graphs betweenness centrality vectors by key ``betweenness_centrality``.
+
     Parameters
     ----------
     data : dict
@@ -87,6 +99,10 @@ def eigenvector_centrality(data):
     """
     Eigenvector centrality graph metric.
 
+    Takes dictionary with graphs adjacency matrices by key ``X``
+    and returns the same dictionary, but with calculated
+    graphs eigenvector centrality vectors by key ``eigenvector_centrality``.
+
     Parameters
     ----------
     data : dict
@@ -112,6 +128,10 @@ def pagerank(data):
     """
     Pagerank graph metric.
 
+    Takes dictionary with graphs adjacency matrices by key ``X``
+    and returns the same dictionary, but with calculated
+    graphs pagerank vectors by key ``pagerank``.
+
     Parameters
     ----------
     data : dict
@@ -134,6 +154,10 @@ def pagerank(data):
 def clustering_coefficient(data):
     """
     Clustering coefficient graph metric.
+
+    Takes dictionary with graphs adjacency matrices by key ``X``
+    and returns the same dictionary, but with calculated
+    graphs clustering coefficient vectors by key ``clustering_coefficient``.
 
     Parameters
     ----------
@@ -158,6 +182,10 @@ def clustering_coefficient(data):
 def triangles(data):
     """
     Triangles graph metric.
+
+    Takes dictionary with graphs adjacency matrices by key ``X``
+    and returns the same dictionary, but with calculated
+    graphs triangles vectors by key ``triangles``.
 
     Parameters
     ----------
@@ -193,6 +221,10 @@ def efficiency(data):
     """
     Efficiency graph metric.
 
+    Takes dictionary with graphs adjacency matrices by key ``X``
+    and returns the same dictionary, but with calculated
+    graphs efficiency vectors by key ``efficiency``.
+
     Parameters
     ----------
     data : dict
@@ -219,6 +251,10 @@ def efficiency(data):
 def bag_of_edges(data, SPL=None, symmetric=True, return_df=False, offset=1):
     """
     Bag of edges graph metric.
+
+    Takes dictionary with graphs adjacency matrices by key ``X``
+    and returns the same dictionary, but with calculated
+    graphs bag of edges vectors by key ``bag_of_edges``.
 
     Parameters
     ----------

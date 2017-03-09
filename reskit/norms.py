@@ -5,7 +5,10 @@ import numpy as np
 
 def binar_norm(data):
     """
-    Binary norm.
+    Binary matrix normalization.
+
+    Replaces all matrix values above zero threshold with 1s and
+    set all other values to 0s.
 
     Parameters
     ----------
@@ -32,7 +35,10 @@ def binar_norm(data):
 
 def max_norm(data):
     """
-    Max norm.
+    Max matrix normalization.
+
+    Transforms a matrix to normalized by the maximum
+    matrix value.
 
     Parameters
     ----------
@@ -58,7 +64,10 @@ def max_norm(data):
 
 def mean_norm(data):
     """
-    Mean norm.
+    Mean matrix normalization.
+
+    Transforms a matrix to normalized by the mean
+    matrix value.
 
     Parameters
     ----------
@@ -84,7 +93,10 @@ def mean_norm(data):
 
 def spectral_norm(data):
     """
-    Spectral norm.
+    Spectral matrix normalization.
+
+    Transforms a matrix to normalized by the geometric mean
+    of adjacent degrees.
 
     Parameters
     ----------
@@ -112,7 +124,10 @@ def spectral_norm(data):
 
 def rwalk_norm(data):
     """
-    Rwalk norm.
+    Random walk matrix normalization.
+
+    Transforms a matrix to normalized by degree of
+    a destination node.
 
     Parameters
     ----------
@@ -140,7 +155,9 @@ def rwalk_norm(data):
 
 def double_norm(function, X1, X2):
     """
-    Double norm.
+    Double normalization.
+
+    Applies normalization function to two matrices.
 
     Parameters
     ----------
@@ -157,7 +174,9 @@ def double_norm(function, X1, X2):
 
 def sqrtw(data):
     """
-    Square root norm.
+    Square root matrix normalization.
+
+    Transforms each matrix value to square root of this value.
 
     Parameters
     ----------
@@ -183,7 +202,9 @@ def sqrtw(data):
 
 def invdist(data):
     """
-    Inverse distance norm.
+    Inverse distance matrix normalization.
+
+    Inverces each matrix number.
 
     Parameters
     ----------
@@ -212,7 +233,10 @@ def invdist(data):
 
 def rootwbydist(data):
     """
-    Root weight by distance norm.
+    Root weight by distance matrix normalization.
+
+    Transforms each matrix value to square root of this value
+    normalized by some defined weight.
 
     Parameters
     ----------
@@ -239,7 +263,10 @@ def rootwbydist(data):
 
 def wbysqdist(data):
     """
-    Weights by squared distance norm.
+    Weights by squared distance matrix normalization.
+
+    Transforms a matrix to normalized by square root of
+    some defined weight.
 
     Parameters
     ----------
@@ -266,7 +293,10 @@ def wbysqdist(data):
 
 def neg_log(data):
     """
-    Negative logarithm norm.
+    Negative logarithm matrix normalization.
+
+    Transforms each matrix value to negative logarithm
+    of this value.
 
     Parameters
     ----------
