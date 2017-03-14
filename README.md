@@ -42,28 +42,25 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 
 scalers = [
-	('minmax', MinMaxScaler()),
-	('standard', StandardScaler())
+    ('minmax', MinMaxScaler()),
+    ('standard', StandardScaler())
 ]
 
 classifiers = [
-	('LR', LogisticRegression()),
-	('SVC', SVC())
+    ('LR', LogisticRegression()),
+    ('SVC', SVC())
 ]
 
 steps = [
-	('Scaler', scalers),
-	('Classifier', classifiers)
+    ('Scaler', scalers),
+    ('Classifier', classifiers)
 ]
 
 param_grid = {
-	'LR' : {
-		'penalty' : ['l1', 'l2']
-	},
-	'SVC' : {
-		'kernel' : ['linear', 'poly', 'rbf', 'sigmoid']
-	}
-}
+    'LR' : {
+        'penalty' : ['l1', 'l2']},
+    'SVC' : {
+        'kernel' : ['linear', 'poly', 'rbf', 'sigmoid']}}
 ```
 
 Creating a plan of our research:
@@ -118,7 +115,7 @@ To install dependencies run next command:
 ```bash
 pip install -r https://raw.githubusercontent.com/neuro-ml/reskit/master/requirements.txt
 ```
-To install latest development version of Reskit, run the following commands:
+To install the latest development version of Reskit, run the following commands:
 
 ```bash
 pip install -U https://github.com/neuro-ml/reskit/archive/master.zip
