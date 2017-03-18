@@ -14,4 +14,5 @@ RUN apt-get install -yqq \
 
 RUN pip3 install -U pip
 RUN pip3 install -U notebook==4.2.3
+RUN pip3 install -r https://github.com/neuro-ml/reskit/blob/master/requirements.txt
 RUN pip3 install -U https://github.com/neuro-ml/reskit/archive/master.zip
