@@ -12,7 +12,7 @@ from collections import OrderedDict
 from itertools import product
 from pandas import DataFrame
 from pickle import dump, load
-from numpy import mean, std, hstack, zeros
+from numpy import mean, std, hstack, vstack, zeros
 from time import time
 
 import os
@@ -485,10 +485,18 @@ class DataTransformer(TransformerMixin, BaseEstimator):
         Takes values by keys in collect from input data dictionary.
     """
 
-    def __init__(self, func, collect=None, **params):
+    def __init__(
+            self,
+            func,
+            from_field='matrices',
+            to_field='matrices',
+            collect=None,
+            **params):
         self.func = func
-        self.params = params
+        self.from_field = from_field
+        self.to_field = to_field
         self.collect = collect
+        self.params = params
 
     def fit(self, data, target=None, **fit_params):
         """
@@ -512,20 +520,33 @@ class DataTransformer(TransformerMixin, BaseEstimator):
             Dictionary with keys ``X`` and ``y``. You can store other
             needed staff here.
         """
+
+        def v_dict_stack(dictionary):
+            keys = iter(dictionary.keys())
+            vstacked = dictionary[next(keys)]
+            for key in keys:
+                vstacked = vstack((vstacked, dictionary[key]))
+            return vstacked
+
         if isinstance(data, dict):
             data = data.copy()
 
-        for key in data['matrices']:
-            data['matrices'][key] = self.func(data['matrices'][key], **self.params)
+        if self.to_field not in data:
+            data[self.to_field] = {}
+
+        for key in data[self.from_field]:
+            data[self.to_field][key] = self.func(
+                data[self.from_field][key], **self.params)
 
         if self.collect:
-            y = result['y']
-            X = result[self.collect[0]]
+            y = data['y']
+            X = v_dict_stack( data[self.collect[0]] )
 
             for key in self.collect[1:]:
-                X = hstack((X, result[key]))
+                X = hstack( (X, v_dict_stack(data[key])) )
             return X, y
 
         return data
+
 
 __all__ = ['Transformer', 'Pipeliner']
