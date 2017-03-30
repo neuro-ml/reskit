@@ -9,9 +9,19 @@ Reskit (researcher’s kit) is a library for creating and curating reproducible 
 Features
 -----
 
-Reskit is intended to provide
-  * makes possible simply reproducible experiments
-  * graph's matrix norms and metrics
+  * Ability to combine pipelines with equal number of steps in list of experiments, running them and returning results in a convenient format for analysis (Pandas dataframe).
+
+  * Preprocessing steps caching. Usual SciKit-learn pipelines cannot cache temporary steps. We provide an opportunity to save fixed steps, so in next pipeline already calculated steps won’t be recalculated.
+
+  * Ability to set "forbidden combinations" for chosen steps of a pipeline. It helps to test only needed pipelines, not all possible combinations. 
+  
+  * Full compatibility with scikit-learn objects. It means you can use in Reskit any scikit-learn data transforming object or any predictive model implemented in scikit-learn.
+
+  * Evaluating experiments using several performance metrics. 
+
+  * Creation of transformers for your own tasks through DataTransformer class, which allows you to use your functions as data processing steps in pipelines. 
+
+  * Tools for machine learning on networks, particularly, for connectomics. Particularly, you can normalize adjacency matrices of graphs and calculate state-of-the-art local metrics using DataTransformer and BCTpy (Brain Connectivity Toolbox python version) or use some implemented in Reskit metrics [3]
 
 Getting started: A Short Introduction to Reskit
 -----------------------------------------------
