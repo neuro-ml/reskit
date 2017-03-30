@@ -6,7 +6,7 @@ Reskit (researcher’s kit) is a library for creating and curating reproducible 
 
 .. contents::
 
-Goals
+Features
 -----
 
 Reskit is intended to provide
