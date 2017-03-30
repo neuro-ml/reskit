@@ -469,7 +469,7 @@ class Pipeliner(object):
         return scores
 
 
-class Transformer(TransformerMixin, BaseEstimator):
+class DataTransformer(TransformerMixin, BaseEstimator):
     """
     Helps to add you own transformation through usual functions.
 
@@ -485,7 +485,7 @@ class Transformer(TransformerMixin, BaseEstimator):
         Takes values by keys in collect from input data dictionary.
     """
 
-    def __init__(self, func, params=None, collect=None):
+    def __init__(self, func, collect=None, **params):
         self.func = func
         self.params = params
         self.collect = collect
@@ -515,10 +515,8 @@ class Transformer(TransformerMixin, BaseEstimator):
         if isinstance(data, dict):
             data = data.copy()
 
-        if self.params:
-            result = self.func(**self.params)
-        else:
-            result = self.func(data)
+        for key in data['matrices']:
+            data['matrices'][key] = self.func(data['matrices'][key], **self.params)
 
         if self.collect:
             y = result['y']
@@ -528,6 +526,6 @@ class Transformer(TransformerMixin, BaseEstimator):
                 X = hstack((X, result[key]))
             return X, y
 
-        return result
+        return data
 
 __all__ = ['Transformer', 'Pipeliner']
