@@ -2,8 +2,7 @@
 Overview
 ========
 
-Reskit is a Python language package for making reproducible machine learning experiments. 
-Mainly built on ``scikit-learn`` it helps to work with machine learning pipelines fast and efficient. 
+Reskit (researcher’s kit) is a library for creating and curating reproducible pipelines for scientific and industrial machine learning. The natural extension of the ``scikit-learn`` Pipelines to general classes of pipelines, Reskit allows for the efficient and transparent optimization of each pipeline step. Main features include data caching, compatibility with most of the scikit-learn objects, optimization constraints (e.g. forbidden combinations), and table generation for quality metrics. Reskit also allows for the injection of custom metrics into the underlying scikit frameworks. Reskit is intended for use by researchers who need pipelines amenable to versioning and reproducibility, yet who also have a large volume of experiments to run.
 
 .. contents::
 
