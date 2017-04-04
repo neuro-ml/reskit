@@ -1,9 +1,11 @@
 language: python
 sudo: false
+cache:
+  pip: true
 before_install:
   - pip install -U pip
 install:
   - pip install -r requirements.txt
   - pip install -r requirements-dev.txt
   - python setup.py install
-script: reskit/tests/py.test
+script: py.test reskit/tests/
