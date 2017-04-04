@@ -10,12 +10,14 @@ from reskit.features import clustering_coefficient
 from reskit.features import triangles
 from reskit.features import efficiency
 
+
 def is_equal(matrix_1, matrix_2):
 
     return (matrix_1 == matrix_2).all()
 
 
 def test_bag_of_edges():
+
     input_matrix_0 = np.array([[0, 1, 2],
                                [0, 0, 3],
                                [0, 0, 0]])

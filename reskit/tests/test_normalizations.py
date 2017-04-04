@@ -11,6 +11,7 @@ from reskit.normalizations import invdist
 from reskit.normalizations import rootwbydist
 from reskit.normalizations import wbysqdist
 
+
 def is_equal(matrix_1, matrix_2):
 
     return (matrix_1 == matrix_2).all()
@@ -47,6 +48,7 @@ def test_max_norm():
 
 
 def test_mean_norm():
+
     input_matrix_0 = np.array([[1, 1, 1],
                                [2, 2, 2],
                                [3, 3, 3]])
