@@ -12,7 +12,7 @@ from collections import OrderedDict
 from itertools import product
 from pandas import DataFrame
 from pickle import dump, load
-from numpy import mean, std, hstack, vstack, zeros
+from numpy import mean, std, hstack, vstack, zeros, array
 from time import time
 
 import os
@@ -92,7 +92,6 @@ class Pipeliner(object):
     >>> from reskit.core import Pipeliner
 
     >>> X, y = make_classification()
-    >>> data = {'X': X, 'y': y}
 
     >>> scalers = [('minmax', MinMaxScaler()), ('standard', StandardScaler())]
     >>> classifiers = [('LR', LogisticRegression()), ('SVC', SVC())]
@@ -105,7 +104,7 @@ class Pipeliner(object):
     >>>               'SVC' : {'kernel' : ['linear', 'poly', 'rbf', 'sigmoid']}}
 
     >>> pipe = Pipeliner(steps, eval_cv=eval_cv, grid_cv=grid_cv, param_grid=param_grid)
-    >>> pipe.get_results(data=data, grid_cv=grid_cv, eval_cv=eval_cv, scoring=['roc_auc'])
+    >>> pipe.get_results(X=X, y=y, grid_cv=grid_cv, eval_cv=eval_cv, scoring=['roc_auc'])
     """
 
     def __init__(self, steps, eval_cv=None, grid_cv=None, param_grid=dict(),
@@ -139,19 +138,24 @@ class Pipeliner(object):
         self.eval_cv = eval_cv
         self.grid_cv = grid_cv
         self.param_grid = param_grid
-        self._cached_data = OrderedDict()
+        self._cached_X = OrderedDict()
         self.best_params = dict()
         self.scores = dict()
 
-    def get_results(self, data, caching_steps=list(), scoring='accuracy',
+    def get_results(self, X, y, caching_steps=list(), scoring='accuracy',
                     logs_file='results.log', collect_n=None):
         """
         Gives results dataframe by defined pipelines.
 
         Parameters
         ----------
-        data : any type transformer can handle
-            Data you want to use
+
+        X : array-like
+            The data to fit. Can be, for example a list, or an array at least 2d, or
+            dictionary.
+
+        y : array-like, optional, default: None
+            The target variable to try to predict in the case of supervised learning.
 
         caching_steps : list of strings
             Steps which won’t be recalculated for each new pipeline.
@@ -211,12 +215,7 @@ class Pipeliner(object):
                 caching_keys = list(row[caching_steps].values)
 
                 time_point = time()
-                if caching_keys != []:
-                    X_featured, y = self.transform_with_caching(
-                        data, caching_keys)
-                else:
-                    X_featured = data['X']
-                    y = data['y']
+                X_featured, y = self.transform_with_caching(X, y, caching_keys)
                 spent_time = round(time() - time_point, 3)
                 logs.write('Got Features: {} sec\n'.format(spent_time))
 
@@ -258,16 +257,18 @@ class Pipeliner(object):
 
         return results
 
-    def transform_with_caching(self, data, row_keys):
+    def transform_with_caching(self, X, y, row_keys):
         """
-        Takes ``data`` and sends in to pipeliner from ``plan_table`` with
-        transformers names as in ``row_keys`` list.
+        Transforms ``X`` with caching.
 
         Parameters
         ----------
-        data : any type transformer can handle
-            A data on which you want to transform using transformers
-            from ``named_steps``.
+        X : array-like
+            The data to fit. Can be, for example a list, or an array at least 2d, or
+            dictionary.
+
+        y : array-like, optional, default: None
+            The target variable to try to predict in the case of supervised learning.
 
         row_keys : list of strings
             List of transformers names. ``Pipeliner`` takes
@@ -282,8 +283,8 @@ class Pipeliner(object):
         """
         columns = list(self.plan_table.columns[:len(row_keys)])
 
-        def remove_unmatched_caching_data(row_keys):
-            cached_keys = list(self._cached_data)
+        def remove_unmatched_caching_X(row_keys):
+            cached_keys = list(self._cached_X)
             unmatched_caching_keys = cached_keys.copy()
             for row_key, cached_key in zip(row_keys, cached_keys):
                 if not row_key == cached_key:
@@ -291,33 +292,33 @@ class Pipeliner(object):
                 unmatched_caching_keys.remove(row_key)
 
             for unmatched_caching_key in unmatched_caching_keys:
-                del self._cached_data[unmatched_caching_key]
+                del self._cached_X[unmatched_caching_key]
 
-        def transform_data_from_last_cached(row_keys, columns):
-            prev_key = list(self._cached_data)[-1]
+        def transform_X_from_last_cached(row_keys, columns):
+            prev_key = list(self._cached_X)[-1]
             for row_key, column in zip(row_keys, columns):
                 transformer = self.named_steps[column][row_key]
-                data = self._cached_data[prev_key]
-                self._cached_data[row_key] = transformer.fit_transform(data)
+                X = self._cached_X[prev_key]
+                self._cached_X[row_key] = transformer.fit_transform(X)
                 prev_key = row_key
 
-        if 'init' not in self._cached_data:
-            self._cached_data['init'] = data
-            transform_data_from_last_cached(row_keys, columns)
+        if 'init' not in self._cached_X:
+            self._cached_X['init'] = X
+            transform_X_from_last_cached(row_keys, columns)
         else:
             row_keys = ['init'] + row_keys
             columns = ['init'] + columns
-            remove_unmatched_caching_data(row_keys)
-            cached_keys = list(self._cached_data)
+            remove_unmatched_caching_X(row_keys)
+            cached_keys = list(self._cached_X)
             cached_keys_length = len(cached_keys)
             for i in range(cached_keys_length):
                 del row_keys[0]
                 del columns[0]
-            transform_data_from_last_cached(row_keys, columns)
+            transform_X_from_last_cached(row_keys, columns)
 
-        last_cached_key = list(self._cached_data)[-1]
+        last_cached_key = list(self._cached_X)[-1]
 
-        return self._cached_data[last_cached_key]
+        return self._cached_X[last_cached_key], y
 
     def get_grid_search_results(self, X, y, row_keys, scoring):
         """
@@ -326,13 +327,12 @@ class Pipeliner(object):
 
         Parameters
         ----------
-        X : array-like, shape = [n_samples, n_features]
-            Training vector, where n_samples is the number of samples and
-            n_features is the number of features.
+        X : array-like
+            The data to fit. Can be, for example a list, or an array at least 2d, or
+            dictionary.
 
-        y : array-like, shape = [n_samples] or [n_samples, n_output], optional
-            Target relative to X for classification or regression; None
-            for unsupervised learning.
+        y : array-like, optional, default: None
+            The target variable to try to predict in the case of supervised learning.
 
         row_keys : list of strings
             List of transformers names. ``Pipeliner`` takes transformers
@@ -411,13 +411,12 @@ class Pipeliner(object):
 
         Parameters
         ----------
-        X : array-like, shape = [n_samples, n_features]
-            Training vector, where n_samples is the number of samples and
-            n_features is the number of features.
+        X : array-like
+            The data to fit. Can be, for example a list, or an array at least 2d, or
+            dictionary.
 
-        y : array-like, shape = [n_samples] or [n_samples, n_output], optional
-            Target relative to X for classification or regression; None
-            for unsupervised learning.
+        y : array-like, optional, default: None
+            The target variable to try to predict in the case of supervised learning.
 
         row_keys : list of strings
             List of transformers names. ``Pipeliner`` takes transformers
@@ -469,17 +468,68 @@ class Pipeliner(object):
         return scores
 
 
+def walker_by_zero_dim(func, X, **params):
+
+    X = X.copy()
+    new_X = []
+    for i in range( len(X) ):
+        new_X.append( func(X[i], **params) )
+    return array(new_X)
+
+
+def walker_by_ids(func, X, **params):
+
+    def v_dict_stack(dictionary):
+        keys = iter(dictionary.keys())
+        vstacked = dictionary[next(keys)]
+        for key in keys:
+            vstacked = vstack((vstacked, dictionary[key]))
+        return vstacked
+
+    from_field = params.pop('global__from_field')
+    to_field = params.pop('global__to_field')
+
+    collect = None
+    if 'global__collect' in params:
+        collect = params.pop('global__collect')
+
+    X = X.copy()
+
+    if to_field not in X:
+        X[to_field] = {}
+
+    for key in X[from_field]:
+        X[to_field][key] = func(
+                X[from_field][key], **params)
+
+    if collect:
+        X_stacked = v_dict_stack( X[collect[0]] )
+
+        for key in collect[1:]:
+            X_stacked = hstack( (X_stacked, v_dict_stack(X[key])) )
+        return X_stacked
+
+    return X
+
+
 class DataTransformer(TransformerMixin, BaseEstimator):
     """
     Helps to add you own transformation through usual functions.
 
     Parameters
     ----------
-    func : function
-        Function that transforms input data.
+    global_func : function
+        A function that defines a way a local function will
+        transform data.
+
+    local_func : function
+        A function that transforms input data.
 
     params : dict
-        Parameters for the function.
+        Parameters for the functions. For sending parameters
+        to ``global_func`` you should write `global__` before
+        a needed parameter name. Other parameters will be used
+        for ``local_function``.
 
     collect : list of strings
         Takes values by keys in collect from input data dictionary.
@@ -487,66 +537,46 @@ class DataTransformer(TransformerMixin, BaseEstimator):
 
     def __init__(
             self,
-            func,
-            from_field='matrices',
-            to_field='matrices',
-            collect=None,
+            global_func,
+            local_func,
             **params):
-        self.func = func
-        self.from_field = from_field
-        self.to_field = to_field
-        self.collect = collect
+        self.global_func = global_func
+        self.local_func = local_func
         self.params = params
 
-    def fit(self, data, target=None, **fit_params):
+    def fit(self, X, y=None, **fit_params):
         """
         Fits the data.
 
         Parameters
         ----------
-        data : dict
-            Dictionary with keys ``X`` and ``y``. You can store other
-            needed staff here.
+        X : array-like
+            The data to fit. Can be, for example a list, or an array at least 2d, or
+            dictionary.
+
+        y : array-like, optional, default: None
+            The target variable to try to predict in the case of supervised learning.
         """
         return self
 
-    def transform(self, data):
+    def transform(self, X, y=None):
         """
-        Transforms the data according to function you set.
+        Transforms the data according to functions you set.
 
         Parameters
         ----------
-        data : dict
-            Dictionary with keys ``X`` and ``y``. You can store other
-            needed staff here.
+        X : array-like
+            The data to fit. Can be, for example a list, or an array at least 2d, or
+            dictionary.
+
+        y : array-like, optional, default: None
+            The target variable to try to predict in the case of supervised learning.
         """
+        X = X.copy()
+        X = self.global_func(self.local_func, X, **self.params)
 
-        def v_dict_stack(dictionary):
-            keys = iter(dictionary.keys())
-            vstacked = dictionary[next(keys)]
-            for key in keys:
-                vstacked = vstack((vstacked, dictionary[key]))
-            return vstacked
-
-        if isinstance(data, dict):
-            data = data.copy()
-
-        if self.to_field not in data:
-            data[self.to_field] = {}
-
-        for key in data[self.from_field]:
-            data[self.to_field][key] = self.func(
-                data[self.from_field][key], **self.params)
-
-        if self.collect:
-            y = data['y']
-            X = v_dict_stack( data[self.collect[0]] )
-
-            for key in self.collect[1:]:
-                X = hstack( (X, v_dict_stack(data[key])) )
-            return X, y
-
-        return data
+        return X, y
 
 
-__all__ = ['Transformer', 'Pipeliner']
+__all__ = ['Transformer', 'Pipeliner',
+           'walker_by_zero_dim', 'walker_by_ids']
