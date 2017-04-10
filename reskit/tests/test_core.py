@@ -24,6 +24,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 
+
 def get_mean_std_params_for_best_clf(grid_clf):
     for i, params in enumerate(grid_clf.cv_results_['params']):
 
@@ -32,8 +33,9 @@ def get_mean_std_params_for_best_clf(grid_clf):
             for key in grid_clf.best_params_:
                 best_params[key.split('__')[1]] = grid_clf.best_params_[key]
             return  grid_clf.cv_results_['mean_test_score'][i], \
-                    grid_clf.cv_results_['std_test_score'][i], \
-                    str(best_params)
+                grid_clf.cv_results_['std_test_score'][i], \
+                str(best_params)
+
 
 def are_dicts_equal(dict_1, dict_2):
 
@@ -77,17 +79,17 @@ def test_DataTransformer_collect():
     output_X = np.hstack((degrees_features, bag_of_edges_features))
 
     temp_X, temp_y = DataTransformer(
-            global_func=walker_by_ids,
-            global__from_field='matrices',
-            global__to_field='degrees',
-            local_func=degrees).fit_transform(X, y)
+        global_func=walker_by_ids,
+        global__from_field='matrices',
+        global__to_field='degrees',
+        local_func=degrees).fit_transform(X, y)
 
     result_X, result_y = DataTransformer(
-            global_func=walker_by_ids,
-            global__from_field='matrices',
-            global__to_field='bag_of_edges',
-            global__collect=['degrees', 'bag_of_edges'],
-            local_func=bag_of_edges).fit_transform(temp_X, temp_y)
+        global_func=walker_by_ids,
+        global__from_field='matrices',
+        global__to_field='bag_of_edges',
+        global__collect=['degrees', 'bag_of_edges'],
+        local_func=bag_of_edges).fit_transform(temp_X, temp_y)
 
     assert are_matrices_equal(result_X, output_X)
 
@@ -108,10 +110,10 @@ def test_DataTransformer_simple_transformation():
                            'id3': mean_norm(matrix_2)}}
 
     result, y = DataTransformer(
-            global_func=walker_by_ids,
-            global__from_field='matrices',
-            global__to_field='matrices',
-            local_func=mean_norm).fit_transform(X, y)
+        global_func=walker_by_ids,
+        global__from_field='matrices',
+        global__to_field='matrices',
+        local_func=mean_norm).fit_transform(X, y)
 
     assert are_dicts_equal(output['matrices'], result['matrices'])
 
@@ -132,11 +134,11 @@ def test_DataTransformer_walker_by_zero_dim():
                        mean_norm(matrix_2)])
 
     result, y = DataTransformer(
-            global_func=walker_by_zero_dim,
-            local_func=mean_norm).fit_transform(X, y)
+        global_func=walker_by_zero_dim,
+        local_func=mean_norm).fit_transform(X, y)
 
     assert (output == result).all()
-    
+
 
 def test_Pipeliner_table_generation():
 
@@ -184,23 +186,34 @@ def test_Pipeliner_simple_experiment():
     pipeline3 = Pipeline([('Scaler', StandardScaler()),
                           ('Classifier', SVC())])
 
-    param_grid_LR = {'Classifier__penalty' : ['l1', 
-                                              'l2']}
-    param_grid_SVC = {'Classifier__kernel' : ['linear', 
-                                              'poly', 
-                                              'rbf', 
-                                              'sigmoid']}
+    param_grid_LR = {'Classifier__penalty': ['l1',
+                                             'l2']}
+    param_grid_SVC = {'Classifier__kernel': ['linear',
+                                             'poly',
+                                             'rbf',
+                                             'sigmoid']}
 
-    grid_clf0 = GridSearchCV(estimator=pipeline0, param_grid=param_grid_LR, n_jobs=-1)
-    grid_clf1 = GridSearchCV(estimator=pipeline1, param_grid=param_grid_SVC, n_jobs=-1)
-    grid_clf2 = GridSearchCV(estimator=pipeline2, param_grid=param_grid_LR, n_jobs=-1)
-    grid_clf3 = GridSearchCV(estimator=pipeline3, param_grid=param_grid_SVC, n_jobs=-1)
+    grid_clf0 = GridSearchCV(
+        estimator=pipeline0,
+        param_grid=param_grid_LR,
+        n_jobs=-1)
+    grid_clf1 = GridSearchCV(
+        estimator=pipeline1,
+        param_grid=param_grid_SVC,
+        n_jobs=-1)
+    grid_clf2 = GridSearchCV(
+        estimator=pipeline2,
+        param_grid=param_grid_LR,
+        n_jobs=-1)
+    grid_clf3 = GridSearchCV(
+        estimator=pipeline3,
+        param_grid=param_grid_SVC,
+        n_jobs=-1)
 
     grid_clf0.fit(X, y)
     grid_clf1.fit(X, y)
     grid_clf2.fit(X, y)
     grid_clf3.fit(X, y)
-
 
     scores0 = cross_val_score(grid_clf0.best_estimator_, X, y, n_jobs=-1)
     scores1 = cross_val_score(grid_clf1.best_estimator_, X, y, n_jobs=-1)
@@ -212,22 +225,22 @@ def test_Pipeliner_simple_experiment():
                 Classifier=['LR', 'SVC',
                             'LR', 'SVC'])
 
-    scalers = [('minmax', MinMaxScaler()), 
+    scalers = [('minmax', MinMaxScaler()),
                ('standard', StandardScaler())]
 
-    classifiers = [('LR', LogisticRegression()), 
+    classifiers = [('LR', LogisticRegression()),
                    ('SVC', SVC())]
 
-    steps = [('Scaler', scalers), 
+    steps = [('Scaler', scalers),
              ('Classifier', classifiers)]
 
-    param_grid = {'LR' : {'penalty' : ['l1', 
-                                       'l2']},
+    param_grid = {'LR': {'penalty': ['l1',
+                                     'l2']},
 
-                  'SVC' : {'kernel' : ['linear', 
-                                       'poly', 
-                                       'rbf', 
-                                       'sigmoid']}}
+                  'SVC': {'kernel': ['linear',
+                                     'poly',
+                                     'rbf',
+                                     'sigmoid']}}
 
     output_grid0 = get_mean_std_params_for_best_clf(grid_clf0)
     output_grid1 = get_mean_std_params_for_best_clf(grid_clf1)
@@ -236,20 +249,20 @@ def test_Pipeliner_simple_experiment():
 
     pipe = Pipeliner(steps=steps,
                      param_grid=param_grid)
-    
+
     result = pipe.get_results(X, y)
 
-    result_grid0 = (result.grid_accuracy_mean.loc[0], \
-                    result.grid_accuracy_std.loc[0], \
+    result_grid0 = (result.grid_accuracy_mean.loc[0],
+                    result.grid_accuracy_std.loc[0],
                     result.grid_accuracy_best_params.loc[0])
-    result_grid1 = (result.grid_accuracy_mean.loc[1], \
-                    result.grid_accuracy_std.loc[1], \
+    result_grid1 = (result.grid_accuracy_mean.loc[1],
+                    result.grid_accuracy_std.loc[1],
                     result.grid_accuracy_best_params.loc[1])
-    result_grid2 = (result.grid_accuracy_mean.loc[2], \
-                    result.grid_accuracy_std.loc[2], \
+    result_grid2 = (result.grid_accuracy_mean.loc[2],
+                    result.grid_accuracy_std.loc[2],
                     result.grid_accuracy_best_params.loc[2])
-    result_grid3 = (result.grid_accuracy_mean.loc[3], \
-                    result.grid_accuracy_std.loc[3], \
+    result_grid3 = (result.grid_accuracy_mean.loc[3],
+                    result.grid_accuracy_std.loc[3],
                     result.grid_accuracy_best_params.loc[3])
 
     assert all([output_grid0 == result_grid0])
@@ -286,24 +299,24 @@ def test_Pipeliner_forbidden_combinations():
 
 
 def test_Pipeliner_caching():
-    
+
     X, y = make_classification()
-    
+
     output = StandardScaler().fit_transform(X)
 
     scalers = [('standard', StandardScaler())]
 
     classifiers = [('LR', LogisticRegression())]
 
-    steps = [('Scaler', scalers), 
+    steps = [('Scaler', scalers),
              ('Classifier', classifiers)]
 
-    param_grid = {'LR' : {'penalty' : ['l1', 
-                                       'l2']}}
+    param_grid = {'LR': {'penalty': ['l1',
+                                     'l2']}}
 
     pipe = Pipeliner(steps=steps,
                      param_grid=param_grid)
-    
+
     pipe.get_results(X, y, caching_steps=['Scaler'])
     result = pipe._cached_X['standard']
 
