@@ -28,7 +28,6 @@ from sklearn.datasets import make_classification
 
 
 X, y = make_classification()
-data = {'X': X, 'y': y}
 ```
 
 Setting steps for our pipelines and parameters for grid search:
@@ -79,7 +78,7 @@ pipeliner.plan_table
 To tune parameters of models and evaluate this models, run:
 
 ```python
-pipe.get_results(data=data, scoring=['roc_auc'])
+pipeliner.get_results(X, y, scoring=roc_auc')
 ```
 
 ```bash
@@ -94,6 +93,8 @@ Line: 4/4
 |  minmax  |     LR     |      0.839706     |     0.0616379    | {'kernel': 'linear'}     |     0.840254      |     0.0617057    | [ 0.78546713 0.80882353 0.92647059] |
 | standard |     SVC    |      0.849007     |     0.0389125    | {'penalty: 'l1'}         |     0.849265      |     0.0390237    | [ 0.82352941 0.81985294 0.90441176] |
 | standard |     SVC    |      0.839669     |     0.0565861    | {'kernel': 'sigmoid'}    |     0.840182      |     0.0566397    | [ 0.78892734 0.8125 0.91911765]     |
+
+## Documentation
 
 The documentation includes more detailed [tutorial](http://reskit.readthedocs.io/en/latest/tutorial/index.html).
 
