@@ -472,8 +472,8 @@ def walker_by_zero_dim(func, X, **params):
 
     X = X.copy()
     new_X = []
-    for i in range( len(X) ):
-        new_X.append( func(X[i], **params) )
+    for i in range(len(X)):
+        new_X.append(func(X[i], **params))
     return array(new_X)
 
 
@@ -500,13 +500,13 @@ def walker_by_ids(func, X, **params):
 
     for key in X[from_field]:
         X[to_field][key] = func(
-                X[from_field][key], **params)
+            X[from_field][key], **params)
 
     if collect:
-        X_stacked = v_dict_stack( X[collect[0]] )
+        X_stacked = v_dict_stack(X[collect[0]])
 
         for key in collect[1:]:
-            X_stacked = hstack( (X_stacked, v_dict_stack(X[key])) )
+            X_stacked = hstack((X_stacked, v_dict_stack(X[key])))
         return X_stacked
 
     return X
