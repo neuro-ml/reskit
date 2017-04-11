@@ -78,18 +78,18 @@ def test_DataTransformer_collect():
 
     output_X = np.hstack((degrees_features, bag_of_edges_features))
 
-    temp_X, temp_y = DataTransformer(
+    temp_X = DataTransformer(
         global_func=walker_by_ids,
         global__from_field='matrices',
         global__to_field='degrees',
-        local_func=degrees).fit_transform(X, y)
+        local_func=degrees).fit_transform(X)
 
-    result_X, result_y = DataTransformer(
+    result_X = DataTransformer(
         global_func=walker_by_ids,
         global__from_field='matrices',
         global__to_field='bag_of_edges',
         global__collect=['degrees', 'bag_of_edges'],
-        local_func=bag_of_edges).fit_transform(temp_X, temp_y)
+        local_func=bag_of_edges).fit_transform(temp_X)
 
     assert are_matrices_equal(result_X, output_X)
 
@@ -109,11 +109,11 @@ def test_DataTransformer_simple_transformation():
                            'id2': mean_norm(matrix_1),
                            'id3': mean_norm(matrix_2)}}
 
-    result, y = DataTransformer(
+    result = DataTransformer(
         global_func=walker_by_ids,
         global__from_field='matrices',
         global__to_field='matrices',
-        local_func=mean_norm).fit_transform(X, y)
+        local_func=mean_norm).fit_transform(X)
 
     assert are_dicts_equal(output['matrices'], result['matrices'])
 
@@ -133,9 +133,9 @@ def test_DataTransformer_walker_by_zero_dim():
                        mean_norm(matrix_1),
                        mean_norm(matrix_2)])
 
-    result, y = DataTransformer(
+    result = DataTransformer(
         global_func=walker_by_zero_dim,
-        local_func=mean_norm).fit_transform(X, y)
+        local_func=mean_norm).fit_transform(X)
 
     assert (output == result).all()
 
