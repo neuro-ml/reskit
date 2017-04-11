@@ -575,7 +575,7 @@ class DataTransformer(TransformerMixin, BaseEstimator):
         X = X.copy()
         X = self.global_func(self.local_func, X, **self.params)
 
-        return X, y
+        return X
 
 
 __all__ = ['Transformer', 'Pipeliner',
