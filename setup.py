@@ -12,6 +12,7 @@ setup(name='reskit',
       author_email='alexander.radievich@gmail.com,'
                    'to.dmitry.petrov@gmail.com',
       url='https://github.com/neuro-ml/reskit',
+      include_package_data=True,
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Developers',
