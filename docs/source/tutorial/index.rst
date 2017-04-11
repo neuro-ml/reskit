@@ -27,3 +27,4 @@ You can view all tutorials in format of jupyter notebooks `here <https://github.
 
   pipeliner
   transformers
+  ml_on_graphs
