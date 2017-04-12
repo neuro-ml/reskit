@@ -1,19 +1,28 @@
 # Reskit
+
 [![Documentation Status](https://readthedocs.org/projects/reskit/badge/?version=0.1.x)](http://reskit.readthedocs.io/en/0.1.x/?badge=0.1.x)
 [![Join the chat at https://gitter.im/ResearcherKit/Lobby](https://badges.gitter.im/ResearcherKit/Lobby.svg)](https://gitter.im/ResearcherKit/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/neuro-ml/reskit.svg?branch=master)](https://travis-ci.org/neuro-ml/reskit)
 [![codecov](https://codecov.io/gh/neuro-ml/reskit/branch/master/graph/badge.svg)](https://codecov.io/gh/neuro-ml/reskit)
 
-Reskit is a Python language package for making reproducible machine learning
-experiments. Mainly built on ``scikit-learn``, it helps to work with machine
-learning pipelines fast and efficient.
 
-## Goals
+Reskit (researcher’s kit) is a library for creating and curating reproducible pipelines for scientific and industrial machine learning. The natural extension of the ``scikit-learn`` Pipelines to general classes of pipelines, Reskit allows for the efficient and transparent optimization of each pipeline step. Main features include data caching, compatibility with most of the scikit-learn objects, optimization constraints (e.g. forbidden combinations), and table generation for quality metrics. Reskit also allows for the injection of custom metrics into the underlying scikit frameworks. Reskit is intended for use by researchers who need pipelines amenable to versioning and reproducibility, yet who also have a large volume of experiments to run.
 
-Reskit is intended to provide:
+## Features
 
-* simply reproducible experiments
-* graph's matrix norms and metrics
+* Ability to combine pipelines with an equal number of steps in list of experiments, running them and returning results in a convenient format for human consumption (Pandas dataframe).
+
+* Step caching. Standard SciKit-learn pipelines cannot cache temporary steps. Reskit includes the option  to save fixed steps, so in next pipeline specified steps won’t be recalculated.
+
+* Forbidden combination constraints. Not all possible combinations of pipelines are viable or meaningfully different. For example, in a classification task comparing the performance of  logistic regression and decision trees the former requires feature scaling while the latter may not. In this case you can block the unnecessary pair. Reskit supports general tuple blocking as well. 
+
+* Full compatibility with scikit-learn objects. Reskit can use any scikit-learn data transforming object and/or predictive model, and assumably many other libraries that uses the scikit template.
+
+* Evaluation of multiple performance metrics simultaneously. Evaluation is simply another step in the pipeline, so we can specify a number of possible evaluation metrics and Reskit will expand out the computations for each metric for each pipeline.
+
+* The DataTransformer class, which is Reskit’s simplfied interface for specifying fit/transform methods in pipeline steps. A DataTransformer subclass need only specify one function.
+
+* Tools for learning on graphs. Due to our original motivations Reskit includes a number of operations for network data. In particular, it allows  a variety of normalization choices foradjacency matrices , as well as built in  local graph metric calculations. These were implemented using  DataTransformer and in some cases the BCTpy (the Brain Connectivity Toolbox python version) [3]
 
 ## Example
 
