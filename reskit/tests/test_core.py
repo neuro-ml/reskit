@@ -7,9 +7,8 @@ import numpy as np
 import pandas as pd
 
 from reskit.core import DataTransformer
+from reskit.core import MatrixTransformer
 from reskit.core import Pipeliner
-from reskit.core import walker_by_zero_dim
-from reskit.core import walker_by_ids
 from reskit.normalizations import mean_norm
 from reskit.normalizations import binar_norm
 from reskit.features import bag_of_edges
@@ -37,88 +36,36 @@ def get_mean_std_params_for_best_clf(grid_clf):
                 str(best_params)
 
 
-def are_dicts_equal(dict_1, dict_2):
-
-    if dict_1.keys() != dict_2.keys():
-        return False
-
-    equal = True
-    for key in dict_1:
-        if (dict_1[key] != dict_2[key]).all():
-            return False
-
-    return True
-
-
-def are_matrices_equal(matrix_1, matrix_2):
-
-    return (matrix_1 == matrix_2).all()
-
-
-def test_DataTransformer_collect():
+def test_DataTransformer():
 
     matrix_0 = np.random.rand(5, 5)
     matrix_1 = np.random.rand(5, 5)
     matrix_2 = np.random.rand(5, 5)
     y = np.array([0, 0, 1])
 
-    X = {'matrices': {'id1': matrix_0,
-                      'id2': matrix_1,
-                      'id3': matrix_2}}
-
-    degrees_features = np.array(
-        [degrees(X['matrices']['id1']),
-         degrees(X['matrices']['id2']),
-         degrees(X['matrices']['id3'])])
-
-    bag_of_edges_features = np.array(
-        [bag_of_edges(X['matrices']['id1']),
-         bag_of_edges(X['matrices']['id2']),
-         bag_of_edges(X['matrices']['id3'])])
-
-    output_X = np.hstack((degrees_features, bag_of_edges_features))
-
-    temp_X = DataTransformer(
-        global_func=walker_by_ids,
-        global__from_field='matrices',
-        global__to_field='degrees',
-        local_func=degrees).fit_transform(X)
-
-    result_X = DataTransformer(
-        global_func=walker_by_ids,
-        global__from_field='matrices',
-        global__to_field='bag_of_edges',
-        global__collect=['degrees', 'bag_of_edges'],
-        local_func=bag_of_edges).fit_transform(temp_X)
-
-    assert are_matrices_equal(result_X, output_X)
+    def transform_func(data):
+        N = len(data['matrices'])
+        for i in range(N):
+            data['matrices'][i] = mean_norm(
+                    data['matrices'][i])
+        return data
 
 
-def test_DataTransformer_simple_transformation():
+    X = {'matrices': np.array([matrix_0,
+                               matrix_1,
+                               matrix_2])}
 
-    matrix_0 = np.random.rand(5, 5)
-    matrix_1 = np.random.rand(5, 5)
-    matrix_2 = np.random.rand(5, 5)
-    y = np.array([0, 0, 1])
-
-    X = {'matrices': {'id1': matrix_0,
-                      'id2': matrix_1,
-                      'id3': matrix_2}}
-
-    output = {'matrices': {'id1': mean_norm(matrix_0),
-                           'id2': mean_norm(matrix_1),
-                           'id3': mean_norm(matrix_2)}}
+    output = {'matrices': np.array([mean_norm(matrix_0),
+                                    mean_norm(matrix_1),
+                                    mean_norm(matrix_2)])}
 
     result = DataTransformer(
-        global_func=walker_by_ids,
-        global__from_field='matrices',
-        global__to_field='matrices',
-        local_func=mean_norm).fit_transform(X)
+        func=transform_func).fit_transform(X)
 
-    assert are_dicts_equal(output['matrices'], result['matrices'])
+    assert (output['matrices'] == result['matrices']).all()
 
 
-def test_DataTransformer_walker_by_zero_dim():
+def test_MatrixTransformer():
 
     matrix_0 = np.random.rand(5, 5)
     matrix_1 = np.random.rand(5, 5)
@@ -133,9 +80,8 @@ def test_DataTransformer_walker_by_zero_dim():
                        mean_norm(matrix_1),
                        mean_norm(matrix_2)])
 
-    result = DataTransformer(
-        global_func=walker_by_zero_dim,
-        local_func=mean_norm).fit_transform(X)
+    result = MatrixTransformer(
+        func=mean_norm).fit_transform(X)
 
     assert (output == result).all()
 

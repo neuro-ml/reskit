@@ -142,7 +142,7 @@ class Pipeliner(object):
         self.best_params = dict()
         self.scores = dict()
 
-    def get_results(self, X, y, caching_steps=list(), scoring='accuracy',
+    def get_results(self, X, y=None, caching_steps=list(), scoring='accuracy',
                     logs_file='results.log', collect_n=None):
         """
         Gives results dataframe by defined pipelines.
@@ -468,49 +468,59 @@ class Pipeliner(object):
         return scores
 
 
-def walker_by_zero_dim(func, X, **params):
+class MatrixTransformer(TransformerMixin, BaseEstimator):
+    """
+    Helps to add you own transformation through usual functions.
 
-    X = X.copy()
-    new_X = []
-    for i in range(len(X)):
-        new_X.append(func(X[i], **params))
-    return array(new_X)
+    Parameters
+    ----------
 
+    func : function
+        A function that transforms input data.
 
-def walker_by_ids(func, X, **params):
+    params : dict
+        Parameters for the function.
+    """
 
-    def v_dict_stack(dictionary):
-        keys = iter(dictionary.keys())
-        vstacked = dictionary[next(keys)]
-        for key in keys:
-            vstacked = vstack((vstacked, dictionary[key]))
-        return vstacked
+    def __init__(
+            self,
+            func,
+            **params):
+        self.func = func
+        self.params = params
 
-    from_field = params.pop('global__from_field')
-    to_field = params.pop('global__to_field')
+    def fit(self, X, y=None, **fit_params):
+        """
+        Fits the data.
 
-    collect = None
-    if 'global__collect' in params:
-        collect = params.pop('global__collect')
+        Parameters
+        ----------
+        X : array-like
+            The data to fit. Should be a 3D array.
 
-    X = X.copy()
+        y : array-like, optional, default: None
+            The target variable to try to predict in the case of supervised learning.
+        """
+        return self
 
-    if to_field not in X:
-        X[to_field] = {}
+    def transform(self, X, y=None):
+        """
+        Transforms the data according to function you set.
 
-    for key in X[from_field]:
-        X[to_field][key] = func(
-            X[from_field][key], **params)
+        Parameters
+        ----------
+        X : array-like
+            The data to fit. Can be, for example a list, or an array at least 2d, or
+            dictionary.
 
-    if collect:
-        X_stacked = v_dict_stack(X[collect[0]])
-
-        for key in collect[1:]:
-            X_stacked = hstack((X_stacked, v_dict_stack(X[key])))
-        return X_stacked
-
-    return X
-
+        y : array-like, optional, default: None
+            The target variable to try to predict in the case of supervised learning.
+        """
+        X = X.copy()
+        new_X = []
+        for i in range(len(X)):
+            new_X.append(self.func(X[i], **self.params))
+        return array(new_X)
 
 class DataTransformer(TransformerMixin, BaseEstimator):
     """
@@ -518,30 +528,19 @@ class DataTransformer(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    global_func : function
-        A function that defines a way a local function will
-        transform data.
 
-    local_func : function
+    func : function
         A function that transforms input data.
 
     params : dict
-        Parameters for the functions. For sending parameters
-        to ``global_func`` you should write `global__` before
-        a needed parameter name. Other parameters will be used
-        for ``local_function``.
-
-    collect : list of strings
-        Takes values by keys in collect from input data dictionary.
+        Parameters for the function.
     """
 
     def __init__(
             self,
-            global_func,
-            local_func,
+            func,
             **params):
-        self.global_func = global_func
-        self.local_func = local_func
+        self.func = func
         self.params = params
 
     def fit(self, X, y=None, **fit_params):
@@ -561,7 +560,7 @@ class DataTransformer(TransformerMixin, BaseEstimator):
 
     def transform(self, X, y=None):
         """
-        Transforms the data according to functions you set.
+        Transforms the data according to function you set.
 
         Parameters
         ----------
@@ -573,10 +572,9 @@ class DataTransformer(TransformerMixin, BaseEstimator):
             The target variable to try to predict in the case of supervised learning.
         """
         X = X.copy()
-        X = self.global_func(self.local_func, X, **self.params)
-
-        return X
+        return self.func(X, **self.params)
 
 
-__all__ = ['Transformer', 'Pipeliner',
-           'walker_by_zero_dim', 'walker_by_ids']
+__all__ = ['MatrixTransformer',
+           'DataTransformer',
+           'Pipeliner']
