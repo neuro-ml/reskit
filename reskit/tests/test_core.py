@@ -47,9 +47,8 @@ def test_DataTransformer():
         N = len(data['matrices'])
         for i in range(N):
             data['matrices'][i] = mean_norm(
-                    data['matrices'][i])
+                data['matrices'][i])
         return data
-
 
     X = {'matrices': np.array([matrix_0,
                                matrix_1,
