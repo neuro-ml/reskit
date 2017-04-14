@@ -90,8 +90,8 @@ Creating a plan of our research:
 
 .. code-block:: python
 
-  pipe = Pipeliner(steps, param_grid=param_grid)
-  pipe.plan_table 
+  pipeliner = Pipeliner(steps, param_grid=param_grid)
+  pipeliner.plan_table 
 
 +---+------------+----------------+
 |   | **Scaler** | **Classifier** |
@@ -108,7 +108,7 @@ Creating a plan of our research:
 To tune parameters of models and evaluate this models, run:
 
 .. code-block:: python
-  pipe.get_results(X, y, scoring=['roc_auc'])
+  pipeliner.get_results(X, y, scoring=['roc_auc'])
 
 .. code-block:: bash
 
