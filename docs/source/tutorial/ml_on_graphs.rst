@@ -1,3 +1,7 @@
+==========================
+Machine Learning on Graphs
+==========================
+
 We already used some graph metrics in the previous tutorial. There we will
 cover graphs metrics and features in details. Also, we will cover Brain
 Connectivity Toolbox usage.

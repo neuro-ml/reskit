@@ -2,9 +2,6 @@
 Tutorial
 ========
 
-Motivation
-----------
-
 A central task in machine learning and data science is the comparison and
 selection of models. The evaluation of a single model is very simple, and can
 be carried out in a reproducible fashion using the standard scikit pipeline.
