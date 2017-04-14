@@ -30,19 +30,16 @@ We can normalize and build some metrics.
 
   from reskit.normalizations import mean_norm
   from reskit.features import bag_of_edges
-  from reskit.core import DataTransformer
-  from reskit.core import walker_by_zero_dim
+  from reskit.core import MatrixTransformer
 
 
-  normalized_X = DataTransformer(
-      global_func=walker_by_zero_dim,
-      local_func=mean_norm).fit_transform(X)
+  normalized_X = MatrixTransformer(
+      func=mean_norm).fit_transform(X)
 
-  featured_X = DataTransformer(
-      global_func=walker_by_zero_dim,
-      local_func=mean_norm).fit_transform(normalized_X)
+  featured_X = MatrixTransformer(
+      func=bag_of_edges).fit_transform(normalized_X)
 
-4. Brain Connectivity Toolbox
+3. Brain Connectivity Toolbox
 -----------------------------
 
 We provide some basic graph metrics in Reskit. To access most state of the art
@@ -72,10 +69,9 @@ parameter, called damping factor (see bctpy documentation for more info).
 
 .. code-block:: python 
 
-  featured_X = DataTransformer(
-      global_func=walker_by_zero_dim,
+  featured_X = MatrixTransformer(
       d=0.85,
-      local_func=pagerank_centrality).fit_transform(X)
+      func=pagerank_centrality).fit_transform(X)
 
 If we want to try pagerank_centrality and degrees for SVM and
 LogisticRegression classfiers.
@@ -90,13 +86,11 @@ LogisticRegression classfiers.
   from reskit.core import Pipeliner
 
   # Feature extraction step variants (1st step)
-  featurizers = [('pagerank', DataTransformer(    
-                                  global_func=walker_by_zero_dim,
+  featurizers = [('pagerank', MatrixTransformer(    
                                   d=0.85,
-                                  local_func=pagerank_centrality)),
-                 ('degrees', DataTransformer(
-                                  global_func=walker_by_zero_dim,
-                                  local_func=degrees_und))]
+                                  func=pagerank_centrality)),
+                 ('degrees', MatrixTransformer(
+                                  func=degrees_und))]
 
   # Models (3rd step)
   classifiers = [('LR', LogisticRegression()),

@@ -3,18 +3,18 @@ Transformers Usage
 ==================
 
 This tutorial helps you to understand how you can transform your data using
-DataTransformer class and how to make your own classes for data transformation.
+DataTransformer and MatrixTransformer classes and how to make your own classes
+for data transformation.
 
-1. Simple Example
------------------
+1. MatrixTransformer
+--------------------
 
 .. code-block:: python
 
   import numpy as np
 
   from reskit.normalizations import mean_norm
-  from reskit.core import DataTransformer
-  from reskit.core import walker_by_zero_dim
+  from reskit.core import MatrixTransformer
 
   matrix_0 = np.random.rand(5, 5)
   matrix_1 = np.random.rand(5, 5)
@@ -29,9 +29,8 @@ DataTransformer class and how to make your own classes for data transformation.
                      mean_norm(matrix_1),
                      mean_norm(matrix_2)])
 
-  result = DataTransformer(
-                  global_func=walker_by_zero_dim,
-                  local_func=mean_norm ).fit_transform(X)
+  result = MatrixTransformer(
+              func=mean_norm).fit_transform(X)
 
   (output == result).all()
 
@@ -39,127 +38,46 @@ DataTransformer class and how to make your own classes for data transformation.
 
   True
 
-DataTransformer uses two functions for transformation: global function and
-local function. A global function helps to define the way a local function will
-be used to transform data. A local function is a simple transformation of one
-sample from the data. For example, a local function may be normalisation by
-mean, as in the instance above.
-
-We used global function walker_by_zero_dim there. As you can see from the
-following source code it transforms each matrix in data according to a local
-function.
-
-.. code-block:: python
-
-  def walker_by_zero_dim(func, X, **params):
-
-      X = X.copy()
-      new_X = []
-      for i in range(len(X)):
-          new_X.append(func(X[i], **params))
-      return array(new_X)
+This is a simple example of MatrixTransformer usage. Input X for transformation
+with MatrixTransformer should be a 3 dimensional array (array of matrices). So,
+MatrixTransformer just transforms each matrix in X.
 
 If you have a data with specific data structure it is useful and convenient to
 write your function for data processing.
 
-2. Use dictionaries for data
-----------------------------
+2. DataTransformer
+------------------
 
-In some cases, it is useful to store some additional information in X to
-creation final features set X.
+To simply write new transformers we provide DataTransformer. The main idea is
+to write functions which takes some X and output transformed X. Thus, you
+shouldn't write a transformation class for compatibility with sklearn
+pipelines. So, here is example of DataTransformer usage:
 
 .. code-block:: python
 
-  from reskit.core import walker_by_ids
+  from reskit.core import DataTransformer
 
 
-  def are_dicts_equal(dict_1, dict_2):
-
-      if dict_1.keys() != dict_2.keys():
-          return False
-
-      equal = True
-      for key in dict_1:
-          if (dict_1[key] != dict_2[key]).all():
-              return False
-
-      return True
-
-  X = {'matrices': {'id1': matrix_0,
-                    'id2': matrix_1,
-                    'id3': matrix_2}}
-
-  output = {'matrices': {'id1': mean_norm(matrix_0),
-                         'id2': mean_norm(matrix_1),
-                         'id3': mean_norm(matrix_2)}}
+  def mean_norm_trans(X):
+      X = X.copy()
+      N = len(X)
+      for i in range(N):
+          X[i] = mean_norm(X[i])
+      return X
 
   result = DataTransformer(
-      global_func=walker_by_ids,
-      global__from_field='matrices',
-      global__to_field='matrices',
-      local_func=mean_norm).fit_transform(X)
+              func=mean_norm_trans).fit_transform(X)
 
-  are_dicts_equal(output['matrices'], result['matrices'])
+  (output == result).all()
 
 .. code-block:: bash
 
   True
 
-Global and local functions can have their own parameters. To access global
-function parameters you should write "global__" before a needed parameter, as
-in the instance above. Other parameters you write in DataTransformer input will
-be referred to local_function parameters.
+As you can see, we writed the same transformation, but with DataTransformer
+instead of MatrixTransformer.
 
-3. Transform a data dictionary to an usual array
-------------------------------------------------
-
-But if we use X as dictionary we should transform it into an array before usage
-in usual sklearn machine learning pipelines. Usually, we want to choose just
-one field from the dictionary and use it as X array, but sometimes we want to
-collect X array from different fields of the dictionary. In this case, we use
-collect parameter of DataTransformer. If you put a list of fields from X
-dictionary to DataTransformer, it stacks horizontally arrays from this fields
-to one X array. In the following instance, we created bag_of_edges and degrees
-features for our graphs and stack they for one X array.
-
-.. code-block:: python
-
-  from reskit.features import bag_of_edges
-  from reskit.features import degrees
-
-
-  degrees_features = np.array(
-      [degrees(X['matrices']['id1']),
-       degrees(X['matrices']['id2']),
-       degrees(X['matrices']['id3'])])
-
-  bag_of_edges_features = np.array(
-      [bag_of_edges(X['matrices']['id1']),
-       bag_of_edges(X['matrices']['id2']),
-       bag_of_edges(X['matrices']['id3'])])
-
-  output_X = np.hstack((degrees_features, bag_of_edges_features))
-
-  temp_X = DataTransformer(
-      global_func=walker_by_ids,
-      global__from_field='matrices',
-      global__to_field='degrees',
-      local_func=degrees).fit_transform(X)
-
-  result_X = DataTransformer(
-      global_func=walker_by_ids,
-      global__from_field='matrices',
-      global__to_field='bag_of_edges',
-      global__collect=['degrees', 'bag_of_edges'],
-      local_func=bag_of_edges).fit_transform(temp_X)
-
-  (result_X == output_X).all()
-
-.. code-block:: bash
-
-  True
-
-4. Your own transformer
+3. Your own transformer
 -----------------------
 
 If you need more flexibility in transformation, you can implement your own
