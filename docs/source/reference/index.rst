@@ -10,12 +10,13 @@ Core
   :toctree: generated/
 
   Pipeliner
-  Transformer
+  MatrixTransformer
+  DataTransformer
 
 Norms
 -----
 
-.. automodule:: reskit.norms
+.. automodule:: reskit.normalizations
 .. autosummary::
   :toctree: generated/
 
