@@ -1,7 +1,7 @@
 :mod:`reskit.norms`
 ===================
 
-.. automodule:: reskit.norms
+.. automodule:: reskit.normalizations
 
 .. autofunction:: binar_norm
 .. autofunction:: max_norm

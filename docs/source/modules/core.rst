@@ -8,5 +8,9 @@
 .. autoclass:: Pipeliner
   :members:
 
-.. autoclass:: Transformer
+.. autoclass:: MatrixTransformer
   :members:
+
+.. autoclass:: DataTransformer
+  :members:
+
