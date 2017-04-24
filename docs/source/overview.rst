@@ -15,6 +15,7 @@ who also have a large volume of experiments to run.
 
 .. contents::
 
+
 Features
 --------
 
@@ -60,12 +61,12 @@ Data preparing:
 
   X, y = make_classification()
 
+
 Setting steps for our pipelines and parameters for grid search:
 
 .. code-block:: python
   
   from reskit.core import Pipeliner
-
 
   from sklearn.preprocessing import StandardScaler
   from sklearn.preprocessing import MinMaxScaler
@@ -86,11 +87,23 @@ Setting steps for our pipelines and parameters for grid search:
   param_grid = {'LR': {'penalty': ['l1', 'l2']},
                 'SVC': {'kernel': ['linear', 'poly', 'rbf', 'sigmoid']}} 
 
+
+Setting a cross-validation for grid searching of hyperparameters and for evaluation of models with obtained hyperparameters.
+
+.. code-block:: python
+
+  from sklearn.model_selection import StratifiedKFold
+
+
+  grid_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+  eval_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=1)
+
+
 Creating a plan of our research:
 
 .. code-block:: python
 
-  pipeliner = Pipeliner(steps, param_grid=param_grid)
+  pipeliner = Pipeliner(steps=steps, grid_cv=grid_cv, eval_cv=eval_cv, param_grid=param_grid)
   pipeliner.plan_table 
 
 +---+------------+----------------+
@@ -105,10 +118,12 @@ Creating a plan of our research:
 | 3 |  minmax    |       SVC      | 
 +---+------------+----------------+
 
+
 To tune parameters of models and evaluate this models, run:
 
 .. code-block:: python
   pipeliner.get_results(X, y, scoring=['roc_auc'])
+
 
 .. code-block:: bash
 
@@ -129,6 +144,7 @@ To tune parameters of models and evaluate this models, run:
 | 3 |  minmax    |       SVC      | 0.948971              | 0.0311831            | {'kernel': 'rbf'}            | 0.948286              | 0.031253             | [ 0.94117647 0.98961938 0.9140625 ] |
 +---+------------+----------------+-----------------------+----------------------+------------------------------+-----------------------+----------------------+-------------------------------------+
 
+
 Installation
 ------------
 
@@ -147,17 +163,20 @@ To install dependencies run next command:
 
 	pip install -r https://raw.githubusercontent.com/neuro-ml/reskit/master/requirements.txt
 
+
 To install stable version, run the following command:
 
 .. code-block:: bash
 
 	pip install -U https://github.com/neuro-ml/reskit/archive/master.zip
 
+
 To install latest development version of Reskit, run the following commands:
 
 .. code-block:: bash
 
   pip install https://github.com/neuro-ml/reskit/archive/master.zip
+
 
 Some reskit functions depends on:
 
@@ -170,6 +189,7 @@ You may install it via:
 .. code-block:: bash
 
   pip install -r https://raw.githubusercontent.com/nuro-ml/reskit/master/requirements_additional.txt
+
 
 Docker
 ------
@@ -186,11 +206,13 @@ To run Reskit in docker you can use next commands.
   git clone https://github.com/neuro-ml/reskit.git
   cd reskit
 
+
 2. Build:
 
 .. code-block:: bash
 
   docker build -t docker-reskit -f Dockerfile .
+
 
 3. Run container.
 
@@ -200,22 +222,26 @@ To run Reskit in docker you can use next commands.
 
     docker run -it docker-reskit bash
 
+
   b) If you want to run bash in container with shared directory:
 
     .. code-block:: bash
 
       docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit bash
 
+
     .. note:: 
       
       Files won't be deleted after stopping container if you save this
       files in shared directory.
+
 
   c) If you want to start Jupyter Notebook server at ``http://localhost:8809`` in container:
 
     .. code-block:: bash
 
       docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit jupyter notebook --no-browser --ip="*"
+
 
     Open http://localhost:8809 on your local machine in a web browser.
 
