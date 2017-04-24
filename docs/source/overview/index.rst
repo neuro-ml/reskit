@@ -113,6 +113,7 @@ Creating a plan of our research:
 To tune parameters of models and evaluate this models, run:
 
 .. code-block:: python
+
   pipeliner.get_results(X, y, scoring=['roc_auc'])
 
 
