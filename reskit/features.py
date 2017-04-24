@@ -158,7 +158,7 @@ def triangles(X):
     non_weighted_deg_by_deg_minus_one = np.multiply(
         non_weighted_degrees, (non_weighted_degrees - 1))
     tr = np.multiply(
-        np.array(clustX),
+        np.array(clust),
         np.array(
             non_weighted_deg_by_deg_minus_one,
             dtype=float)) / 2.
