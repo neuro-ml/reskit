@@ -104,10 +104,10 @@ class Pipeliner(object):
     >>>               'SVC' : {'kernel' : ['linear', 'poly', 'rbf', 'sigmoid']}}
 
     >>> pipe = Pipeliner(steps, eval_cv=eval_cv, grid_cv=grid_cv, param_grid=param_grid)
-    >>> pipe.get_results(X=X, y=y, grid_cv=grid_cv, eval_cv=eval_cv, scoring=['roc_auc'])
+    >>> pipe.get_results(X=X, y=y, scoring=['roc_auc'])
     """
 
-    def __init__(self, steps, eval_cv=None, grid_cv=None, param_grid=dict(),
+    def __init__(self, steps, eval_cv, grid_cv, param_grid=dict(),
                  banned_combos=list()):
         steps = OrderedDict(steps)
         columns = list(steps)
