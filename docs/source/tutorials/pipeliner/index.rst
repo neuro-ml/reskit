@@ -83,6 +83,7 @@ In case you don't want to use minmax scaler with SVC, you can define banned
 combo:
 
 .. code-block:: python
+
   banned_combos = [('minmax', 'SVC')]
   pipe = Pipeliner(steps=steps, grid_cv=grid_cv, eval_cv=eval_cv, param_grid=param_grid, banned_combos=banned_combos)
   pipe.plan_table
