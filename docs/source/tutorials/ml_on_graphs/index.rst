@@ -21,6 +21,7 @@ high-functioning ASD subjects (6 females) and 43 TD subjects (7 females).
   X, y = load_UCLA_data()
   X = X['matrices']
 
+
 2. Normalizations and Graph Metrics
 -----------------------------------
 
@@ -39,6 +40,7 @@ We can normalize and build some metrics.
   featured_X = MatrixTransformer(
       func=bag_of_edges).fit_transform(normalized_X)
 
+
 3. Brain Connectivity Toolbox
 -----------------------------
 
@@ -50,6 +52,7 @@ pip:
 
   sudo pip install bctpy
 
+
 Let's calculate pagerank centrality of a random graph using BCT python library.
 
 .. code-block:: python
@@ -60,9 +63,11 @@ Let's calculate pagerank centrality of a random graph using BCT python library.
 
   pagerank_centrality(np.random.rand(3,3), d=0.85)
 
+
 .. code-block:: bash
 
   array([ 0.46722034,  0.33387522,  0.19890444])
+
 
 Now we calculates this metric for UCLA dataset. d is the pagerank_centrality
 parameter, called damping factor (see bctpy documentation for more info). 
@@ -73,6 +78,7 @@ parameter, called damping factor (see bctpy documentation for more info).
       d=0.85,
       func=pagerank_centrality).fit_transform(X)
 
+
 If we want to try pagerank_centrality and degrees for SVM and
 LogisticRegression classfiers.
 
@@ -82,6 +88,7 @@ LogisticRegression classfiers.
 
   from sklearn.linear_model import LogisticRegression
   from sklearn.svm import SVC
+  from sklearn.model_selection import StratifiedKFold
 
   from reskit.core import Pipeliner
 
@@ -107,24 +114,22 @@ LogisticRegression classfiers.
   # Quality metric that we want to optimize
   scoring='roc_auc'
 
-  pipe = Pipeliner(steps, param_grid=param_grid)
+  # Setting cross-validations
+  grid_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+  eval_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=1)
+
+  pipe = Pipeliner(steps=steps, grid_cv=grid_cv, eval_cv=eval_cv, param_grid=param_grid)
   pipe.plan_table
 
-+---+----------------+----------------+
-|   | **featurizer** | **classifier** |
-+---+----------------+----------------+
-| 0 | pagerank       | LR             |
-+---+----------------+----------------+
-| 1 | pagerank       | SVC            |
-+---+----------------+----------------+
-| 2 | degrees        | LR             |
-+---+----------------+----------------+
-| 3 | degrees        | SVC            |
-+---+----------------+----------------+
+
+.. csv-table::
+  :file: ml_graphs_results.csv
+
 
 .. code-block:: python
 
   pipe.get_results(X, y, scoring=scoring, caching_steps=['featurizer'])
+
 
 .. code-block:: bash
 
@@ -133,17 +138,10 @@ LogisticRegression classfiers.
   Line: 3/4
   Line: 4/4
 
-+---+----------------+----------------+-----------------------+----------------------+------------------------------+-----------------------+----------------------+------------------------------------+
-|   | **featurizer** | **classifier** | **grid_roc_auc_mean** | **grid_roc_auc_std** | **grid_roc_auc_best_params** | **eval_roc_auc_mean** | **eval_roc_auc_std** | **eval_roc_auc_scores**            |
-+---+----------------+----------------+-----------------------+----------------------+------------------------------+-----------------------+----------------------+------------------------------------+
-| 0 | pagerank       | LR             | 0.5                   | 0                    | {'penalty': 'l1'}            | 0.5                   | 0                    | [ 0.5 0.5 0.5]                     |
-+---+----------------+----------------+-----------------------+----------------------+------------------------------+-----------------------+----------------------+------------------------------------+
-| 1 | pagerank       | SVC            | 0.523565              | 0.049125             | {'kernel': 'rbf'}            | 0.523249              | 0.0492934            | [ 0.55294118 0.56302521 0.45378151]|
-+---+----------------+----------------+-----------------------+----------------------+------------------------------+-----------------------+----------------------+------------------------------------+
-| 2 | degrees        | LR             | 0.5346                | 0.0167932            | {'penalty': 'l2'}            | 0.53436               | 0.016723             | [ 0.55686275 0.51680672 0.52941176]|
-+---+----------------+----------------+-----------------------+----------------------+------------------------------+-----------------------+----------------------+------------------------------------+
-| 3 | degrees        | SVC            | 0.552512              | 0.00940143           | {'kernel': 'poly'}           | 0.552381              | 0.00936597           | [ 0.56470588 0.55042017 0.54201681]|
-+---+----------------+----------------+-----------------------+----------------------+------------------------------+-----------------------+----------------------+------------------------------------+
+  
+.. csv-table::
+  :file: ml_graphs_results.csv
+
 
 This is the main things about maching learning on graphs. Now you can try big
 amount of normalizations features and classifiers for graphs classifcation. In

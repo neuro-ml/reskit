@@ -6,8 +6,8 @@ Reskit: Researcher Kit for Reproducible Machine Learning Experiments.
   :maxdepth: 2
   :caption: Contents:
 
-  overview
-  tutorial/index
+  overview/index
+  tutorials/index
   reference/index
 
 Indices and tables

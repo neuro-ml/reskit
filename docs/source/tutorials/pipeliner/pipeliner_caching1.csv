@@ -1,0 +1,4 @@
+,binarizer,classifier,grid_accuracy_mean,grid_accuracy_std,grid_accuracy_best_params,eval_accuracy_mean,eval_accuracy_std,eval_accuracy_scores
+0,binarizer,LR,0.92,0.0244948974278,{'penalty': 'l1'},0.92,0.0244948974278,[ 0.95  0.9   0.95  0.9   0.9 ]
+1,binarizer,SVC,0.92,0.0244948974278,{'kernel': 'rbf'},0.92,0.0244948974278,[ 0.95  0.9   0.95  0.9   0.9 ]
+2,binarizer,SGD,0.85,0.0894427191,"{'l1_ratio': 0.2, 'penalty': 'elasticnet'}",0.82,0.0812403840464,[ 0.9   0.85  0.9   0.75  0.7 ]

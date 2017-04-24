@@ -1,0 +1,4 @@
+,binarizer,classifier
+0,binarizer,LR
+1,binarizer,SVC
+2,binarizer,SGD

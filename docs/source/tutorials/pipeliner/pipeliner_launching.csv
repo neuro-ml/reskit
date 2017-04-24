@@ -1,0 +1,11 @@
+,feature_engineering,scaler,classifier,grid_roc_auc_mean,grid_roc_auc_std,grid_roc_auc_best_params,eval_roc_auc_mean,eval_roc_auc_std,eval_roc_auc_scores
+0,VT,standard,LR,0.98,0.0109544511501,{'penalty': 'l1'},0.978,0.024,[ 0.99  1.    1.    0.96  0.94]
+1,VT,standard,SVC,0.97,0.0289827534924,{'kernel': 'sigmoid'},0.972,0.036551333765,[ 1.    1.    1.    0.95  0.91]
+2,VT,standard,SGD,0.968,0.0203960780544,"{'l1_ratio': 0.3, 'penalty': 'elasticnet'}",0.958,0.0213541565041,[ 0.98  0.92  0.97  0.97  0.95]
+3,VT,minmax,LR,0.98,0.0141421356237,{'penalty': 'l1'},0.978,0.0203960780544,[ 0.96  1.    1.    0.98  0.95]
+4,VT,minmax,SGD,0.968,0.0193907194297,"{'l1_ratio': 0.2, 'penalty': 'elasticnet'}",0.966,0.0422374241639,[ 0.99  1.    1.    0.95  0.89]
+5,PCA,standard,LR,0.978,0.0116619037897,{'penalty': 'l1'},0.982,0.0193907194297,[ 1.    1.    0.99  0.95  0.97]
+6,PCA,standard,SVC,0.958,0.0263818119165,{'kernel': 'sigmoid'},0.956,0.054258639865,[ 1.    1.    1.    0.88  0.9 ]
+7,PCA,standard,SGD,0.918,0.0426145515053,"{'l1_ratio': 0.3, 'penalty': 'elasticnet'}",0.94,0.0433589667774,[ 0.98  0.96  0.97  0.86  0.93]
+8,PCA,minmax,LR,0.97,0.0352136337233,{'penalty': 'l2'},0.936,0.0705974503789,[ 1.    1.    0.97  0.82  0.89]
+9,PCA,minmax,SGD,0.946,0.032,"{'l1_ratio': 0.1, 'penalty': 'elasticnet'}",0.934,0.0697423830967,[ 1.    1.    0.97  0.84  0.86]

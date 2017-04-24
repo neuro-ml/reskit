@@ -1,0 +1,13 @@
+,feature_engineering,scaler,classifier
+0,VT,standard,LR
+1,VT,standard,SVC
+2,VT,standard,SGD
+3,VT,minmax,LR
+4,VT,minmax,SVC
+5,VT,minmax,SGD
+6,PCA,standard,LR
+7,PCA,standard,SVC
+8,PCA,standard,SGD
+9,PCA,minmax,LR
+10,PCA,minmax,SVC
+11,PCA,minmax,SGD
