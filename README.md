@@ -6,23 +6,58 @@
 [![codecov](https://codecov.io/gh/neuro-ml/reskit/branch/master/graph/badge.svg)](https://codecov.io/gh/neuro-ml/reskit)
 
 
-Reskit (researcher’s kit) is a library for creating and curating reproducible pipelines for scientific and industrial machine learning. The natural extension of the ``scikit-learn`` Pipelines to general classes of pipelines, Reskit allows for the efficient and transparent optimization of each pipeline step. Main features include data caching, compatibility with most of the scikit-learn objects, optimization constraints (e.g. forbidden combinations), and table generation for quality metrics. Reskit also allows for the injection of custom metrics into the underlying scikit frameworks. Reskit is intended for use by researchers who need pipelines amenable to versioning and reproducibility, yet who also have a large volume of experiments to run.
+Reskit (researcher’s kit) is a library for creating and curating reproducible
+pipelines for scientific and industrial machine learning. The natural extension
+of the ``scikit-learn`` Pipelines to general classes of pipelines, Reskit
+allows for the efficient and transparent optimization of each pipeline step.
+Main features include data caching, compatibility with most of the scikit-learn
+objects, optimization constraints (e.g. forbidden combinations), and table
+generation for quality metrics. Reskit also allows for the injection of custom
+metrics into the underlying scikit frameworks. Reskit is intended for use by
+researchers who need pipelines amenable to versioning and reproducibility, yet
+who also have a large volume of experiments to run.
 
 ## Features
 
-* Ability to combine pipelines with an equal number of steps in list of experiments, running them and returning results in a convenient format for human consumption (Pandas dataframe).
+* Ability to combine pipelines with an equal number of steps in list of
+  experiments, running them and returning results in a convenient format for
+  human consumption (Pandas dataframe).
 
-* Step caching. Standard SciKit-learn pipelines cannot cache temporary steps. Reskit includes the option  to save fixed steps, so in next pipeline specified steps won’t be recalculated.
+* Step caching. Standard SciKit-learn pipelines cannot cache temporary steps.
+  Reskit includes the option  to save fixed steps, so in next pipeline
+  specified steps won’t be recalculated.
 
-* Forbidden combination constraints. Not all possible combinations of pipelines are viable or meaningfully different. For example, in a classification task comparing the performance of  logistic regression and decision trees the former requires feature scaling while the latter may not. In this case you can block the unnecessary pair. Reskit supports general tuple blocking as well. 
+* Forbidden combination constraints. Not all possible combinations of pipelines
+  are viable or meaningfully different. For example, in a classification task
+  comparing the performance of  logistic regression and decision trees the
+  former requires feature scaling while the latter may not. In this case you
+  can block the unnecessary pair. Reskit supports general tuple blocking as
+  well. 
 
-* Full compatibility with scikit-learn objects. Reskit can use any scikit-learn data transforming object and/or predictive model, and assumably many other libraries that uses the scikit template.
+* Full compatibility with scikit-learn objects. Reskit can use any scikit-learn
+  data transforming object and/or predictive model, and assumably many other
+  libraries that uses the scikit template.
 
-* Evaluation of multiple performance metrics simultaneously. Evaluation is simply another step in the pipeline, so we can specify a number of possible evaluation metrics and Reskit will expand out the computations for each metric for each pipeline.
+* Evaluation of multiple performance metrics simultaneously. Evaluation is
+  simply another step in the pipeline, so we can specify a number of possible
+  evaluation metrics and Reskit will expand out the computations for each
+  metric for each pipeline.
 
-* The DataTransformer class, which is Reskit’s simplfied interface for specifying fit/transform methods in pipeline steps. A DataTransformer subclass need only specify one function.
+* The DataTransformer class, which is Reskit’s simplfied interface for
+  specifying fit/transform methods in pipeline steps. A DataTransformer
+  subclass need only specify one function.
 
-* Tools for learning on graphs. Due to our original motivations Reskit includes a number of operations for network data. In particular, it allows  a variety of normalization choices foradjacency matrices , as well as built in  local graph metric calculations. These were implemented using  DataTransformer and in some cases the BCTpy (the Brain Connectivity Toolbox python version) [3]
+* Tools for learning on graphs. Due to our original motivations Reskit includes
+  a number of operations for network data. In particular, it allows  a variety
+  of normalization choices foradjacency matrices , as well as built in  local
+  graph metric calculations. These were implemented using  DataTransformer and
+  in some cases the BCTpy (the Brain Connectivity Toolbox python version)
+
+## Documentation
+
+The documentation includes more detailed
+[tutorial](http://reskit.readthedocs.io/en/latest/tutorial/index.html), but for
+a quick view, we provide for you an example.
 
 ## Example
 
@@ -70,24 +105,35 @@ param_grid = {
         'kernel' : ['linear', 'poly', 'rbf', 'sigmoid']}}
 ```
 
+Setting a cross-validation for grid searching of hyperparameters and for
+evaluation of models with obtained hyperparameters.
+
+```python
+from sklearn.model_selection import StratifiedKFold
+
+
+grid_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+eval_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=1)
+```
+
 Creating a plan of our research:
 
 ```python
-pipeliner = Pipeliner(steps=steps, param_grid=param_grid)
+pipeliner = Pipeliner(steps=steps, grid_cv=grid_cv, eval_cv=eval_cv, param_grid=param_grid)
 pipeliner.plan_table
 ```
 
-| Scaler   | Classifier |
-|----------|------------|
-|  minmax  |     LR     |
-|  minmax  |     SVC    |
-| standard |     LR     |
-| standard |     SVC    |
+  |    |  scaler    |  classifier
+  |----|------------|-------------
+  | 0  |  standard  |  LR
+  | 1  |  standard  |  SVC
+  | 2  |  minmax    |  LR
+  | 3  |  minmax    |  SVC
 
 To tune parameters of models and evaluate this models, run:
 
 ```python
-pipeliner.get_results(X, y, scoring=roc_auc')
+pipeliner.get_results(X, y, scoring='roc_auc')
 ```
 
 ```bash
@@ -96,49 +142,49 @@ Line: 2/4
 Line: 3/4
 Line: 4/4
 ```
-|  Scaler  | Classifier | grid_roc_auc_mean | grid_roc_auc_std | grid_roc_auc_best_params | eval_roc_auc_mean | eval_roc_auc_std |         eval_roc_auc_scores         |
-|----------|------------|-------------------|------------------|--------------------------|-------------------|------------------|-------------------------------------|
-|  minmax  |     LR     |      0.869559     |     0.0368628    | {'penalty': 'l1'}        |     0.869954      |     0.0368373    | [ 0.83044983 0.86029412 0.91911765] |
-|  minmax  |     LR     |      0.839706     |     0.0616379    | {'kernel': 'linear'}     |     0.840254      |     0.0617057    | [ 0.78546713 0.80882353 0.92647059] |
-| standard |     SVC    |      0.849007     |     0.0389125    | {'penalty: 'l1'}         |     0.849265      |     0.0390237    | [ 0.82352941 0.81985294 0.90441176] |
-| standard |     SVC    |      0.839669     |     0.0565861    | {'kernel': 'sigmoid'}    |     0.840182      |     0.0566397    | [ 0.78892734 0.8125 0.91911765]     |
 
-## Documentation
+  |   |  scaler    |  classifier  |  grid_roc_auc_mean  |  grid_roc_auc_std  |  grid_roc_auc_best_params  |  eval_roc_auc_mean  |  eval_roc_auc_std  |  eval_roc_auc_scores
+  |---|------------|--------------|---------------------|--------------------|----------------------------|---------------------|--------------------|---------------------------------
+  | 0 |  standard  |  LR          |  0.956              |  0.0338230690506   |  {'penalty': 'l1'}         |  0.968              |  0.0324961536185   |  [ 0.92  1.    1.    0.94  0.98]
+  | 1 |  standard  |  SVC         |  0.962              |  0.0278567765544   |  {'kernel': 'poly'}        |  0.976              |  0.0300665927567   |  [ 0.95  1.    1.    0.93  1.  ]
+  | 2 |  minmax    |  LR          |  0.964              |  0.0412795348811   |  {'penalty': 'l1'}         |  0.966              |  0.0377359245282   |  [ 0.92  1.    1.    0.92  0.99]
+  | 3 |  minmax    |  SVC         |  0.958              |  0.0411825205639   |  {'kernel': 'rbf'}         |  0.962              |  0.0401995024845   |  [ 0.93  1.    1.    0.9   0.98]
 
-The documentation includes more detailed [tutorial](http://reskit.readthedocs.io/en/latest/tutorial/index.html).
 
 ## Installation
 
-Reskit currently requires ``Python 3.4`` or later to run. Please install ``Python`` and
-``pip`` via the package manager of your operating system if it is not included
-already.
+Reskit currently requires ``Python 3.4`` or later to run. Please install
+``Python`` and ``pip`` via the package manager of your operating system if it
+is not included already.
 
 Reskit depends on:
 
-* numpy
-* scikit-learn
-* pandas
+* `numpy`
+* `scikit-learn`
+* `pandas`
+* `scipy`
+* `python-igraph`
+* `networkx`
+
+If you don't want to use graph metrics, you should to comment `scipy`,
+`python-igraph` and `networkx` in `requirements.txt`.
 
 To install dependencies run next command:
 
 ```bash
 pip install -r https://raw.githubusercontent.com/neuro-ml/reskit/master/requirements.txt
 ```
+
+Last stable version is 0.1.0. You can install it via:
+
+```bash
+pip3 install -U https://github.com/neuro-ml/reskit/archive/0.1.0.zip
+```
+
 To install the latest development version of Reskit, run the following commands:
 
 ```bash
 pip install -U https://github.com/neuro-ml/reskit/archive/master.zip
-```
-Some reskit functions depends on:
-
-* scipy
-* python-igraph
-* networkx
-
-You may install it via:
-
-```bash
-pip install -r https://raw.githubusercontent.com/nuro-ml/reskit/master/requirements_additional.txt
 ```
 
 ## Docker
@@ -171,13 +217,20 @@ you can use next commands.
   * If you want to run bash in container with shared directory:
 
     ```bash
-    docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit bash
+    docker run -v $PWD/scripts:/reskit/scripts -it docker-reskit bash
     ```
 
-  * If you want to start Jupyter Notebook server at http://localhost:8809 in container:
+  * If you want to start Jupyter Notebook server at http://localhost:8809 in
+    container:
 
     ```bash
-    docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8888 docker-reskit jupyter notebook --no-browser --ip="*"
+    docker run -v $PWD/scripts:/reskit/scripts -it -p 8809:8809 docker-reskit jupyter notebook --no-browser --ip="*" --allow-root --port 8809
     ```
+    
+    You will see message:
 
-    Open http://localhost:8809 on your local machine in a web browser.
+    ```bash
+      Copy/paste this URL into your browser when you connect for the first time,
+      to login with a token:
+        http://localhost:8809/?token=some_token
+    ```

@@ -10,9 +10,14 @@ RUN apt-get install -yqq \
 	build-essential \
 	python3-setuptools \
 	libxslt1-dev \
-	zlib1g-dev
+	zlib1g-dev \
+  zip
 
 RUN pip3 install -U pip
-RUN pip3 install -U notebook==4.2.3
-RUN pip3 install -r https://github.com/neuro-ml/reskit/blob/master/requirements.txt
-RUN pip3 install -U https://github.com/neuro-ml/reskit/archive/master.zip
+RUN pip3 install -U notebook
+
+ADD . reskit
+
+RUN pip3 install -r reskit/requirements.txt
+RUN zip -r reskit.zip reskit
+RUN pip3 install -U reskit.zip
