@@ -55,7 +55,7 @@ who also have a large volume of experiments to run.
 
 ## Documentation
 
-The documentation includes more detailed
+The documentation includes detailed
 [tutorial](http://reskit.readthedocs.io/en/latest/tutorial/index.html), but for
 a quick view, we provide for you an example.
 
