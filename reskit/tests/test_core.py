@@ -17,11 +17,17 @@ from reskit.features import degrees
 from sklearn.datasets import make_classification
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
-from sklearn.cross_validation import cross_val_score
+from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
+
+from sklearn.model_selection import StratifiedKFold
+
+
+grid_cv = StratifiedKFold(random_state=0)
+eval_cv = StratifiedKFold(random_state=1)
 
 
 def get_mean_std_params_for_best_clf(grid_clf):
@@ -110,7 +116,7 @@ def test_Pipeliner_table_generation():
              ('step2', step2),
              ('step3', step3)]
 
-    result = Pipeliner(steps=steps).plan_table
+    result = Pipeliner(steps=steps, grid_cv=None, eval_cv=None).plan_table
 
     assert ((output == result).all()).all()
 
@@ -141,29 +147,33 @@ def test_Pipeliner_simple_experiment():
     grid_clf0 = GridSearchCV(
         estimator=pipeline0,
         param_grid=param_grid_LR,
-        n_jobs=-1)
+        n_jobs=-1,
+        cv=grid_cv)
     grid_clf1 = GridSearchCV(
         estimator=pipeline1,
         param_grid=param_grid_SVC,
-        n_jobs=-1)
+        n_jobs=-1,
+        cv=grid_cv)
     grid_clf2 = GridSearchCV(
         estimator=pipeline2,
         param_grid=param_grid_LR,
-        n_jobs=-1)
+        n_jobs=-1,
+        cv=grid_cv)
     grid_clf3 = GridSearchCV(
         estimator=pipeline3,
         param_grid=param_grid_SVC,
-        n_jobs=-1)
+        n_jobs=-1,
+        cv=grid_cv)
 
     grid_clf0.fit(X, y)
     grid_clf1.fit(X, y)
     grid_clf2.fit(X, y)
     grid_clf3.fit(X, y)
-
-    scores0 = cross_val_score(grid_clf0.best_estimator_, X, y, n_jobs=-1)
-    scores1 = cross_val_score(grid_clf1.best_estimator_, X, y, n_jobs=-1)
-    scores2 = cross_val_score(grid_clf2.best_estimator_, X, y, n_jobs=-1)
-    scores3 = cross_val_score(grid_clf3.best_estimator_, X, y, n_jobs=-1)
+    
+    scores0 = cross_val_score(grid_clf0.best_estimator_, X, y, cv=eval_cv, n_jobs=-1)
+    scores1 = cross_val_score(grid_clf1.best_estimator_, X, y, cv=eval_cv, n_jobs=-1)
+    scores2 = cross_val_score(grid_clf2.best_estimator_, X, y, cv=eval_cv, n_jobs=-1)
+    scores3 = cross_val_score(grid_clf3.best_estimator_, X, y, cv=eval_cv, n_jobs=-1)
 
     data = dict(Scaler=['minmax', 'minmax',
                         'standard', 'standard'],
@@ -192,7 +202,7 @@ def test_Pipeliner_simple_experiment():
     output_grid2 = get_mean_std_params_for_best_clf(grid_clf2)
     output_grid3 = get_mean_std_params_for_best_clf(grid_clf3)
 
-    pipe = Pipeliner(steps=steps,
+    pipe = Pipeliner(steps=steps, grid_cv=grid_cv, eval_cv=eval_cv,
                      param_grid=param_grid)
 
     result = pipe.get_results(X, y)
@@ -237,7 +247,7 @@ def test_Pipeliner_forbidden_combinations():
 
     banned_combos = [('one', 'two')]
 
-    result = Pipeliner(steps=steps,
+    result = Pipeliner(steps=steps, grid_cv=None, eval_cv=None,
                        banned_combos=banned_combos).plan_table
 
     assert ((output == result).all()).all()
@@ -259,7 +269,7 @@ def test_Pipeliner_caching():
     param_grid = {'LR': {'penalty': ['l1',
                                      'l2']}}
 
-    pipe = Pipeliner(steps=steps,
+    pipe = Pipeliner(steps=steps, grid_cv=grid_cv, eval_cv=eval_cv,
                      param_grid=param_grid)
 
     pipe.get_results(X, y, caching_steps=['Scaler'])
