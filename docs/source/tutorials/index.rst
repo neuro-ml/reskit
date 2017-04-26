@@ -18,7 +18,7 @@ The core of reskit is two classes: ``Pipeliner`` and ``Transformer``.
 First and second sections describe work of this classes.
 The third section explains how to use this classes for machine learning on graphs.
 
-You can view all tutorials in format of jupyter notebooks `here <https://github.com/neuro-ml/reskit/tree/development/tutorials>`_.
+You can view all tutorials in format of jupyter notebooks `here <https://github.com/neuro-ml/reskit/tree/0.1.0/tutorials>`_.
 
 .. toctree::
 
