@@ -7,10 +7,12 @@ import numpy as np
 import pandas as pd
 
 from numpy import array
+from scipy.stats import uniform
 
 from reskit.core import DataTransformer
 from reskit.core import MatrixTransformer
 from reskit.core import Pipeliner
+from reskit.core import NestedGridSearchCV
 from reskit.normalizations import mean_norm
 from reskit.normalizations import binar_norm
 from reskit.features import bag_of_edges
@@ -493,3 +495,90 @@ def test_Pipeliner_grid_cv_None():
     assert 'grid_accuracy_mean' not in result.columns
     assert 'grid_accuracy_std' not in result.columns
     assert 'grid_accuracy_best_params' not in result.columns
+
+
+def test_Pipeliner_optimizer_None():
+
+    X, y = make_classification()
+
+    pipeline0 = Pipeline([('Scaler', MinMaxScaler()),
+                          ('Classifier', LogisticRegression())])
+
+    pipeline1 = Pipeline([('Scaler', MinMaxScaler()),
+                          ('Classifier', SVC())])
+
+    pipeline2 = Pipeline([('Scaler', StandardScaler()),
+                          ('Classifier', LogisticRegression())])
+
+    pipeline3 = Pipeline([('Scaler', StandardScaler()),
+                          ('Classifier', SVC())])
+
+    param_grid_LR = {'Classifier__penalty': ['l1',
+                                             'l2']}
+    param_grid_SVC = {'Classifier__kernel': ['linear',
+                                             'poly',
+                                             'rbf',
+                                             'sigmoid']}
+
+    output_scores0 = cross_val_score(pipeline0, X, y, cv=eval_cv, n_jobs=-1)
+    output_scores1 = cross_val_score(pipeline1, X, y, cv=eval_cv, n_jobs=-1)
+    output_scores2 = cross_val_score(pipeline2, X, y, cv=eval_cv, n_jobs=-1)
+    output_scores3 = cross_val_score(pipeline3, X, y, cv=eval_cv, n_jobs=-1)
+
+    output_scores0 = eval(repr(output_scores0))
+    output_scores1 = eval(repr(output_scores1))
+    output_scores2 = eval(repr(output_scores2))
+    output_scores3 = eval(repr(output_scores3))
+
+    scalers = [('minmax', MinMaxScaler()),
+               ('standard', StandardScaler())]
+
+    classifiers = [('LR', LogisticRegression()),
+                   ('SVC', SVC())]
+
+    steps = [('Scaler', scalers),
+             ('Classifier', classifiers)]
+
+    optimizer = GridSearchCV
+
+    pipe = Pipeliner(steps=steps,
+                     grid_cv=grid_cv, 
+                     eval_cv=eval_cv, 
+                     optimizer=None)
+
+    result = pipe.get_results(X, y)
+
+    result_scores0 = eval(result.eval_accuracy_scores.loc[0])
+    result_scores1 = eval(result.eval_accuracy_scores.loc[1])
+    result_scores2 = eval(result.eval_accuracy_scores.loc[2])
+    result_scores3 = eval(result.eval_accuracy_scores.loc[3])
+
+    assert all(result_scores0 == output_scores0)
+    assert all(result_scores1 == output_scores1)
+    assert all(result_scores2 == output_scores2)
+    assert all(result_scores3 == output_scores3)
+    assert 'grid_accuracy_mean' not in result.columns
+    assert 'grid_accuracy_std' not in result.columns
+    assert 'grid_accuracy_best_params' not in result.columns
+
+"""
+def test_NedtedGridSearchCV():
+    X, y = make_classification()
+    nested_cv = StratifiedKFold(random_state=2)
+    nested_grid = NestedGridSearchCV(cv=grid_cv,
+                                     nested_cv=nested_cv,
+                                     scoring='roc_auc',
+                                     n_jobs=-1)
+    nested_grid.fit(X, y)
+
+    for train, test in cv.split(X, y):
+        grid_clf = GridSearchCV(cv=nested_cv,
+                                scoring='roc_auc',
+                                n_jobs=-1)
+        grid_clf.fit(X[train], y[train])
+        scores.append(mean(grid
+
+    assert nested_grid.best_params_ == output_best_params_
+    assert nested_grid.best_estimators_ == output_best_estimators_
+    assert nested_grid
+"""
