@@ -268,11 +268,16 @@ class Pipeliner(object):
 
         steps[-1][1].set_params(**self.best_params[param_key])
 
+        if 'n_jobs' in self.optimizer_param_dict:
+            n_jobs = self.optimizer_param_dict['n_jobs']
+        else:
+            n_jobs = -1
+
         if not collect_n:
             scores = cross_val_score(Pipeline(steps), X, y,
                                      scoring=scoring,
                                      cv=self.eval_cv,
-                                     n_jobs=-1)
+                                     n_jobs=n_jobs)
         else:
             init_random_state = self.eval_cv.random_state
             scores = list()
